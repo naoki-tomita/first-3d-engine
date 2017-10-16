@@ -123,8 +123,11 @@ var Cube = /** @class */ (function (_super) {
     }
     return Cube;
 }(Model));
-function project(vertex3d, d) {
-    return new Vertex2D(vertex3d.x, vertex3d.z);
+function project(vertex3d) {
+    // Distance between the camera and the plane
+    var d = 400;
+    var r = d / vertex3d.y;
+    return new Vertex2D(r * vertex3d.x, r * vertex3d.z);
 }
 function vec(v1, v2) {
     return new Vertex3D(v1.x - v2.x, v1.y - v2.y, v1.z - v2.z);
@@ -136,7 +139,7 @@ function isDisplay(v1, v2, v3) {
     var vec1 = vec(v1, v2);
     var vec2 = vec(v2, v3);
     var facevec = crossProduct(vec1, vec2);
-    if (facevec.y > 0) {
+    if (facevec.y < 0) {
         return true;
     }
     return false;
@@ -145,7 +148,7 @@ function render(objects, ctx, dx, dy, d) {
     ctx.strokeStyle = "rgba(0, 0, 0, 1)";
     ctx.clearRect(0, 0, 500, 500);
     objects.forEach(function (obj) { return obj.faces.forEach(function (face) {
-        var v1 = project(face.vertex1, d), v2 = project(face.vertex2, d), v3 = project(face.vertex3, d);
+        var v1 = project(face.vertex1), v2 = project(face.vertex2), v3 = project(face.vertex3);
         if (!isDisplay(face.vertex1, face.vertex2, face.vertex3)) {
             return;
         }
@@ -159,8 +162,8 @@ function render(objects, ctx, dx, dy, d) {
         ctx.fill();
     }); });
 }
-var cube1 = new Cube(new Vertex3D(100, 100, 100), 60, 60, 60);
-var cube2 = new Cube(new Vertex3D(-100, -100, -100), 60, 60, 60);
+var cube1 = new Cube(new Vertex3D(30, 100, 30), 60, 60, 60);
+var cube2 = new Cube(new Vertex3D(-30, -100, -30), 60, 60, 60);
 var objects = [cube1, cube2];
 function autorotate() {
     objects.forEach(function (o) {
