@@ -1,0 +1,19 @@
+{
+  "name": "first-3d-engine",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "naoki-tomita <naoki.tomita@jrits.ricoh.co.jp>",
+  "license": "MIT",
+  "dependencies": {
+    "chokidar-cli": "^1.2.0",
+    "local-web-server": "^2.2.4",
+    "npm-run-all": "^4.1.1",
+    "typescript": "^2.5.3"
+  },
+  "scripts": {
+    "start": "run-p watch serve",
+    "build": "tsc index.ts",
+    "watch": "chokidar \"./index.ts\" -c \"yarn build\"",
+    "serve": "ws"
+  }
+}
