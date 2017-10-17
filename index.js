@@ -105,18 +105,20 @@ var Cube = /** @class */ (function (_super) {
             new Vertex3D(p.x + w, p.y + d, p.z + h),
         ];
         var f = [
-            new Face(v[0], v[1], v[2], COLOR.red),
-            new Face(v[1], v[3], v[2], COLOR.red),
-            new Face(v[2], v[3], v[6], COLOR.blue),
-            new Face(v[6], v[3], v[7], COLOR.blue),
-            new Face(v[1], v[5], v[3], COLOR.green),
-            new Face(v[5], v[7], v[3], COLOR.green),
-            new Face(v[4], v[6], v[5], COLOR.orange),
-            new Face(v[5], v[6], v[7], COLOR.orange),
-            new Face(v[0], v[2], v[6], COLOR.yellow),
-            new Face(v[0], v[6], v[4], COLOR.yellow),
-            new Face(v[0], v[4], v[1], COLOR.purple),
-            new Face(v[1], v[4], v[5], COLOR.purple),
+            // 頂点の順序はとても大切。
+            // 頂点の順序によって面の生成方向を決める。v1 -> v2 のベクトルと v2 -> v3 のベクトルの外積を法線ベクトルとする。
+            new Face(v[2], v[1], v[0], COLOR.red),
+            new Face(v[2], v[3], v[1], COLOR.red),
+            new Face(v[6], v[3], v[2], COLOR.blue),
+            new Face(v[7], v[3], v[6], COLOR.blue),
+            new Face(v[3], v[5], v[1], COLOR.green),
+            new Face(v[3], v[7], v[5], COLOR.green),
+            new Face(v[5], v[6], v[4], COLOR.orange),
+            new Face(v[7], v[6], v[5], COLOR.orange),
+            new Face(v[6], v[2], v[0], COLOR.yellow),
+            new Face(v[4], v[6], v[0], COLOR.yellow),
+            new Face(v[1], v[4], v[0], COLOR.purple),
+            new Face(v[5], v[4], v[1], COLOR.purple),
         ];
         _this = _super.call(this, v, f) || this;
         return _this;
@@ -124,27 +126,31 @@ var Cube = /** @class */ (function (_super) {
     return Cube;
 }(Model));
 function project(vertex3d) {
-    // Distance between the camera and the plane
-    var d = 400;
+    // カメラと像を投影するスクリーンの距離
+    var d = 200;
     var r = d / vertex3d.y;
     return new Vertex2D(r * vertex3d.x, r * vertex3d.z);
 }
 function vec(v1, v2) {
     return new Vertex3D(v1.x - v2.x, v1.y - v2.y, v1.z - v2.z);
 }
+// 外積をとる
 function crossProduct(vec1, vec2) {
     return new Vertex3D(vec1.y * vec2.z - vec1.z * vec2.y, vec1.x * vec2.z - vec1.z * vec2.x, vec1.x * vec2.y - vec1.y * vec2.x);
 }
 function isDisplay(v1, v2, v3) {
     var vec1 = vec(v1, v2);
     var vec2 = vec(v2, v3);
+    // 外積(法線ベクトル)をとって
     var facevec = crossProduct(vec1, vec2);
+    // 外積ベクトルがカメラを向いていれば(yが負であれば)表示してもよい
     if (facevec.y < 0) {
         return true;
     }
     return false;
 }
-function render(objects, ctx, dx, dy, d) {
+// dx, dy は 
+function render(objects, ctx, dx, dy) {
     ctx.strokeStyle = "rgba(0, 0, 0, 1)";
     ctx.clearRect(0, 0, 500, 500);
     objects.forEach(function (obj) { return obj.faces.forEach(function (face) {
@@ -153,23 +159,51 @@ function render(objects, ctx, dx, dy, d) {
             return;
         }
         ctx.beginPath();
-        ctx.moveTo(v1.x + dx, -v1.y + dy);
-        ctx.lineTo(v2.x + dx, -v2.y + dy);
-        ctx.lineTo(v3.x + dx, -v3.y + dy);
+        ctx.moveTo(v1.x, -v1.y);
+        ctx.lineTo(v2.x, -v2.y);
+        ctx.lineTo(v3.x, -v3.y);
         ctx.closePath();
         ctx.stroke();
         ctx.fillStyle = face.color.get();
         ctx.fill();
     }); });
 }
-var cube1 = new Cube(new Vertex3D(30, 100, 30), 60, 60, 60);
-var cube2 = new Cube(new Vertex3D(-30, -100, -30), 60, 60, 60);
-var objects = [cube1, cube2];
+var cube1 = new Cube(new Vertex3D(0, 0, 0), 60, 60, 60);
+var cube2 = new Cube(new Vertex3D(0, 100, 0), 60, 60, 60);
+var objects = [
+    // cube1, 
+    cube2,
+];
 function autorotate() {
     objects.forEach(function (o) {
-        o.rotate(Math.PI / 720, Math.PI / 240);
+        o.rotate(Math.PI / 720, Math.PI / 720);
     });
-    render(objects, c, 250, 250, 0);
-    setTimeout(autorotate, 1);
+    render(objects, c, 250, 250);
+    setTimeout(autorotate, 10);
 }
 autorotate();
+var currentKey = 0;
+document.addEventListener("keydown", function (e) {
+    currentKey = e.keyCode;
+});
+function keymove() {
+    var dx = 0, dy = 0, dz = 0;
+    switch (currentKey) {
+        case 37:
+            dx -= 10;
+            break;
+        case 38:
+            dy += 10;
+            break;
+        case 39:
+            dx += 10;
+            break;
+        case 40:
+            dy -= 10;
+            break;
+    }
+    currentKey = 0;
+    objects[0].move(dx, dy, dz);
+    setTimeout(keymove, 1000 / 30);
+}
+keymove();
