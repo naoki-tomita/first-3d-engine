@@ -58,6 +58,12 @@ class Face {
     this.vertex3 = v3;
     this.color = c;
   }
+  getCenter() {
+    const x = ( this.vertex1.x + this.vertex2.x + this.vertex3.x ) / 3;
+    const y = ( this.vertex1.y + this.vertex2.y + this.vertex3.y ) / 3;
+    const z = ( this.vertex1.z + this.vertex2.z + this.vertex3.z ) / 3;
+    return new Vertex3D(x, y, z);
+  }
 }
 
 class Model {
@@ -76,7 +82,7 @@ class Model {
       sumZ += v.z;
     });
     const count = this.vertices.length;
-    return new Vertex3D(sumX/count, sumY/count, sumZ/count);
+    return new Vertex3D(sumX / count, sumY / count, sumZ / count);
   }
   rotate(theta: number, phi: number) {
     const center = this.getCenter();
@@ -142,24 +148,42 @@ function project(vertex3d: Vertex3D) {
   return new Vertex2D(r * vertex3d.x, r * vertex3d.z);
 }
 
-function vec(v1: Vertex3D, v2: Vertex3D) {
+function vector(v1: Vertex3D, v2: Vertex3D) {
   return new Vertex3D(v1.x - v2.x, v1.y - v2.y, v1.z - v2.z);
 }
 
-// 外積をとる
-function crossProduct(vec1: Vertex3D, vec2: Vertex3D) {
-  return new Vertex3D(vec1.y * vec2.z - vec1.z * vec2.y,
-                      vec1.x * vec2.z - vec1.z * vec2.x,
-                      vec1.x * vec2.y - vec1.y * vec2.x);
+// ベクトルのなす角というやつ
+// この計算自体は cos theta を出すための計算なのだけど、関数名が思いつかなかった。
+// thetaは計算不要のはず。
+function vectorAngle(v1: Vertex3D, v2: Vertex3D) {
+  return dotProduct(v1, v2) / (norm(v1) * norm(v2));
 }
 
-function isDisplay(v1: Vertex3D, v2: Vertex3D, v3: Vertex3D) {
-  const vec1 = vec(v1, v2);
-  const vec2 = vec(v2, v3);
+function norm(v: Vertex3D) {
+  return Math.sqrt(
+    Math.pow(v.x, 2) + Math.pow(v.y, 2) + Math.pow(v.z, 2)
+  );
+}
+
+// 内積をとる
+function dotProduct(v1: Vertex3D, v2: Vertex3D) {
+  return v1.x * v2.x + v1.y * v2.y + v1.x * v2.y;
+}
+
+// 外積をとる
+function crossProduct(v1: Vertex3D, v2: Vertex3D) {
+  return new Vertex3D(v1.y * v2.z - v1.z * v2.y,
+                      v1.x * v2.z - v1.z * v2.x,
+                      v1.x * v2.y - v1.y * v2.x);
+}
+
+function isDisplay(face: Face) {
+  const v1 = vector(face.vertex1, face.vertex2); // v1 -> v2のベクトル
+  const v2 = vector(face.vertex2, face.vertex3); // v2 -> v3のベクトル
   // 外積(法線ベクトル)をとって
-  const facevec = crossProduct(vec1, vec2);
-  // 外積ベクトルがカメラを向いていれば(yが負であれば)表示してもよい
-  if (facevec.y < 0) {
+  const facevec = crossProduct(v1, v2);
+  // 外積ベクトルとカメラから面までのベクトルのなす角が90度以下なら表示してもいい
+  if (vectorAngle(face.getCenter(), facevec) < 0) {
     return true;
   }
   return false;
@@ -167,19 +191,19 @@ function isDisplay(v1: Vertex3D, v2: Vertex3D, v3: Vertex3D) {
 // dx, dy は 画面の中心を設定する。そこを中心に画像が生成される
 function render(objects: Model[], ctx: CanvasRenderingContext2D, dx: number, dy: number) {
   ctx.strokeStyle = `rgba(0, 0, 0, 1)`;
-  ctx.clearRect(0, 0, 500, 500);
+  ctx.clearRect(0, 0, dx * 2, dy * 2);
   objects.forEach((obj) => obj.faces.forEach((face) => {
+    if(!isDisplay(face)) {
+      return;
+    }
     const v1 = project(face.vertex1), 
           v2 = project(face.vertex2), 
           v3 = project(face.vertex3);
-    
-    if(!isDisplay(face.vertex1, face.vertex2, face.vertex3)) {
-      return;
-    }
+
     ctx.beginPath();
-    ctx.moveTo(v1.x, -v1.y);
-    ctx.lineTo(v2.x, -v2.y);
-    ctx.lineTo(v3.x, -v3.y);
+    ctx.moveTo(v1.x + dx, -v1.y + dy);
+    ctx.lineTo(v2.x + dx, -v2.y + dy);
+    ctx.lineTo(v3.x + dx, -v3.y + dy);
     ctx.closePath();
     ctx.stroke();
     ctx.fillStyle = face.color.get();
