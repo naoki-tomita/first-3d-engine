@@ -34,18 +34,16 @@ var Color = /** @class */ (function () {
     Color.prototype.get = function () {
         return "rgba(" + this.r + "," + this.g + "," + this.b + "," + this.a + ")";
     };
+    Color.red = new Color(255, 0, 0);
+    Color.green = new Color(0, 255, 0);
+    Color.blue = new Color(0, 0, 255);
+    Color.yellow = new Color(255, 255, 0);
+    Color.pink = new Color(255, 20, 147);
+    Color.orange = new Color(255, 99, 71);
+    Color.cyan = new Color(0, 255, 255);
+    Color.purple = new Color(255, 0, 255);
     return Color;
 }());
-var COLOR = {
-    red: new Color(255, 0, 0),
-    green: new Color(0, 255, 0),
-    blue: new Color(0, 0, 255),
-    yellow: new Color(255, 255, 0),
-    pink: new Color(255, 20, 147),
-    orange: new Color(255, 99, 71),
-    cyan: new Color(0, 255, 255),
-    purple: new Color(255, 0, 255)
-};
 var Face = /** @class */ (function () {
     function Face(v1, v2, v3, c) {
         this.vertex1 = v1;
@@ -113,18 +111,18 @@ var Cube = /** @class */ (function (_super) {
         var f = [
             // 頂点の順序はとても大切。
             // 頂点の順序によって面の生成方向を決める。v1 -> v2 のベクトルと v2 -> v3 のベクトルの外積を法線ベクトルとする。
-            new Face(v[2], v[1], v[0], COLOR.red),
-            new Face(v[2], v[3], v[1], COLOR.red),
-            new Face(v[6], v[3], v[2], COLOR.blue),
-            new Face(v[7], v[3], v[6], COLOR.blue),
-            new Face(v[3], v[5], v[1], COLOR.green),
-            new Face(v[3], v[7], v[5], COLOR.green),
-            new Face(v[5], v[6], v[4], COLOR.orange),
-            new Face(v[7], v[6], v[5], COLOR.orange),
-            new Face(v[6], v[2], v[0], COLOR.yellow),
-            new Face(v[4], v[6], v[0], COLOR.yellow),
-            new Face(v[1], v[4], v[0], COLOR.purple),
-            new Face(v[5], v[4], v[1], COLOR.purple),
+            new Face(v[2], v[1], v[0], Color.red),
+            new Face(v[2], v[3], v[1], Color.red),
+            new Face(v[6], v[3], v[2], Color.blue),
+            new Face(v[7], v[3], v[6], Color.blue),
+            new Face(v[3], v[5], v[1], Color.green),
+            new Face(v[3], v[7], v[5], Color.green),
+            new Face(v[5], v[6], v[4], Color.orange),
+            new Face(v[7], v[6], v[5], Color.orange),
+            new Face(v[6], v[2], v[0], Color.yellow),
+            new Face(v[4], v[6], v[0], Color.yellow),
+            new Face(v[1], v[4], v[0], Color.purple),
+            new Face(v[5], v[4], v[1], Color.purple),
         ];
         _this = _super.call(this, v, f) || this;
         return _this;

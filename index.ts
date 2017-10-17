@@ -34,18 +34,15 @@ class Color {
   get() {
     return `rgba(${this.r},${this.g},${this.b},${this.a})`;
   }
+  static red:    Color = new Color(255, 0, 0)
+  static green:  Color = new Color(0, 255, 0)
+  static blue:   Color = new Color(0, 0, 255)
+  static yellow: Color = new Color(255, 255, 0)
+  static pink:   Color = new Color(255, 20, 147)
+  static orange: Color = new Color(255, 99, 71)
+  static cyan:   Color = new Color(0, 255, 255)
+  static purple: Color = new Color(255, 0, 255)
 }
-
-const COLOR = {
-  red: new Color(255, 0, 0),
-  green: new Color(0, 255, 0),
-  blue: new Color(0, 0, 255),
-  yellow: new Color(255, 255, 0),
-  pink: new Color(255, 20, 147),
-  orange: new Color(255, 99, 71),
-  cyan: new Color(0, 255, 255),
-  purple: new Color(255, 0, 255),
-};
 
 class Face {
   vertex1: Vertex3D;
@@ -123,18 +120,18 @@ class Cube extends Model {
     const f = [
       // 頂点の順序はとても大切。
       // 頂点の順序によって面の生成方向を決める。v1 -> v2 のベクトルと v2 -> v3 のベクトルの外積を法線ベクトルとする。
-      new Face(v[2], v[1], v[0], COLOR.red),
-      new Face(v[2], v[3], v[1], COLOR.red),
-      new Face(v[6], v[3], v[2], COLOR.blue),
-      new Face(v[7], v[3], v[6], COLOR.blue),
-      new Face(v[3], v[5], v[1], COLOR.green),
-      new Face(v[3], v[7], v[5], COLOR.green),
-      new Face(v[5], v[6], v[4], COLOR.orange),
-      new Face(v[7], v[6], v[5], COLOR.orange),
-      new Face(v[6], v[2], v[0], COLOR.yellow),
-      new Face(v[4], v[6], v[0], COLOR.yellow),
-      new Face(v[1], v[4], v[0], COLOR.purple),
-      new Face(v[5], v[4], v[1], COLOR.purple),
+      new Face(v[2], v[1], v[0], Color.red),
+      new Face(v[2], v[3], v[1], Color.red),
+      new Face(v[6], v[3], v[2], Color.blue),
+      new Face(v[7], v[3], v[6], Color.blue),
+      new Face(v[3], v[5], v[1], Color.green),
+      new Face(v[3], v[7], v[5], Color.green),
+      new Face(v[5], v[6], v[4], Color.orange),
+      new Face(v[7], v[6], v[5], Color.orange),
+      new Face(v[6], v[2], v[0], Color.yellow),
+      new Face(v[4], v[6], v[0], Color.yellow),
+      new Face(v[1], v[4], v[0], Color.purple),
+      new Face(v[5], v[4], v[1], Color.purple),
     ];
     super(v, f);
   }
@@ -188,6 +185,7 @@ function isDisplay(face: Face) {
   }
   return false;
 }
+
 // dx, dy は 画面の中心を設定する。そこを中心に画像が生成される
 function render(objects: Model[], ctx: CanvasRenderingContext2D, dx: number, dy: number) {
   ctx.strokeStyle = `rgba(0, 0, 0, 1)`;
