@@ -90,9 +90,9 @@ class Model {
             y = v.y - center.y,
             z = v.z - center.z;
 
-      v.x = ct * x - st * cp * y + st * sp * z + center.x;
-      v.y = st * x + ct * cp * y - ct * sp * z + center.y;
-      v.z = sp * y + cp * z + center.z;
+      v.x = ct * x - st * cp * z + st * sp * y + center.x;
+      v.z = st * x + ct * cp * z - ct * sp * y + center.z;
+      v.y = sp * z + cp * y + center.y;
     });
   }
   move(dx: number, dy: number, dz: number) {
@@ -140,9 +140,9 @@ class Cube extends Model {
 function project(vertex3d: Vertex3D) {
   // カメラと像を投影するスクリーンの距離
   var d = 200;
-  var r = d / vertex3d.y;
+  var r = d / vertex3d.z;
 
-  return new Vertex2D(r * vertex3d.x, r * vertex3d.z);
+  return new Vertex2D(r * vertex3d.x, r * vertex3d.y);
 }
 
 function vector(v1: Vertex3D, v2: Vertex3D) {
@@ -179,8 +179,8 @@ function isDisplay(face: Face) {
   const v2 = vector(face.vertex2, face.vertex3); // v2 -> v3のベクトル
   // 外積(法線ベクトル)をとって
   const facevec = crossProduct(v1, v2);
-  // 外積ベクトルとカメラから面までのベクトルのなす角が90度以下なら表示してもいい
-  if (vectorAngle(face.getCenter(), facevec) < 0) {
+  // 法線ベクトルの奥行き(=y)が負(=カメラ方向を向いている)であれば、表示していい
+  if (facevec.z > 0) {
     return true;
   }
   return false;
@@ -210,7 +210,7 @@ function render(objects: Model[], ctx: CanvasRenderingContext2D, dx: number, dy:
 }
 
 const cube1 = new Cube(new Vertex3D(0, 0, 0), 60, 60, 60);
-const cube2 = new Cube(new Vertex3D(0, 100, 0), 60, 60, 60);
+const cube2 = new Cube(new Vertex3D(0, 0, 100), 60, 60, 60);
 const objects = [ 
   // cube1, 
   cube2,
@@ -218,7 +218,7 @@ const objects = [
 
 function autorotate() {
   objects.forEach(o => {
-    o.rotate(Math.PI / 720, Math.PI / 720);
+    o.rotate(Math.PI / 360, Math.PI / 720);
   });
   render(objects, c, 250, 250);
   setTimeout(autorotate, 10);
