@@ -105,7 +105,7 @@ class Model {
 }
 
 class Cube extends Model {
-  constructor(initialPoint: Vertex3D, width: number, height: number, depth: number) {
+  constructor(initialPoint: Vertex3D, width: number, height: number, depth: number, color: Color) {
     const w = width/2, h = height/2, d = depth/2, p = initialPoint;
     const v = [
       new Vertex3D(p.x - w, p.y - d, p.z - h),
@@ -120,29 +120,30 @@ class Cube extends Model {
     const f = [
       // 頂点の順序はとても大切。
       // 頂点の順序によって面の生成方向を決める。v1 -> v2 のベクトルと v2 -> v3 のベクトルの外積を法線ベクトルとする。
-      new Face(v[2], v[1], v[0], Color.red),
-      new Face(v[2], v[3], v[1], Color.red),
-      new Face(v[6], v[3], v[2], Color.blue),
-      new Face(v[7], v[3], v[6], Color.blue),
-      new Face(v[3], v[5], v[1], Color.green),
-      new Face(v[3], v[7], v[5], Color.green),
-      new Face(v[5], v[6], v[4], Color.orange),
-      new Face(v[7], v[6], v[5], Color.orange),
-      new Face(v[6], v[2], v[0], Color.yellow),
-      new Face(v[4], v[6], v[0], Color.yellow),
-      new Face(v[1], v[4], v[0], Color.purple),
-      new Face(v[5], v[4], v[1], Color.purple),
+      new Face(v[2], v[1], v[0], color),
+      new Face(v[2], v[3], v[1], color),
+      new Face(v[6], v[3], v[2], color),
+      new Face(v[7], v[3], v[6], color),
+      new Face(v[3], v[5], v[1], color),
+      new Face(v[3], v[7], v[5], color),
+      new Face(v[5], v[6], v[4], color),
+      new Face(v[7], v[6], v[5], color),
+      new Face(v[6], v[2], v[0], color),
+      new Face(v[4], v[6], v[0], color),
+      new Face(v[1], v[4], v[0], color),
+      new Face(v[5], v[4], v[1], color),
     ];
     super(v, f);
   }
 }
 
 function project(vertex3d: Vertex3D) {
-  // カメラと像を投影するスクリーンの距離
+  // // カメラと像を投影するスクリーンの距離
   var d = 200;
   var r = d / vertex3d.z;
 
   return new Vertex2D(r * vertex3d.x, r * vertex3d.y);
+  // return new Vertex2D(vertex3d.x, vertex3d.y);
 }
 
 function vector(v1: Vertex3D, v2: Vertex3D) {
@@ -179,8 +180,8 @@ function isDisplay(face: Face) {
   const v2 = vector(face.vertex2, face.vertex3); // v2 -> v3のベクトル
   // 外積(法線ベクトル)をとって
   const facevec = crossProduct(v1, v2);
-  // 法線ベクトルの奥行き(=y)が負(=カメラ方向を向いている)であれば、表示していい
-  if (facevec.z > 0) {
+  // 法線ベクトルの奥行き(=z)が正(=カメラ方向を向いている)であれば、表示していい(奥に行くほうzが大きくなる)
+  if (facevec.z >= 0) {
     return true;
   }
   return false;
@@ -190,7 +191,12 @@ function isDisplay(face: Face) {
 function render(objects: Model[], ctx: CanvasRenderingContext2D, dx: number, dy: number) {
   ctx.strokeStyle = `rgba(0, 0, 0, 1)`;
   ctx.clearRect(0, 0, dx * 2, dy * 2);
-  objects.forEach((obj) => obj.faces.forEach((face) => {
+  objects
+    .sort((a, b) => b.getCenter().z - a.getCenter().z)
+      .forEach((obj) => 
+        obj.faces
+          .sort((a, b) => b.getCenter().z - a.getCenter().z)
+            .forEach((face) => {
     if(!isDisplay(face)) {
       return;
     }
@@ -209,11 +215,17 @@ function render(objects: Model[], ctx: CanvasRenderingContext2D, dx: number, dy:
   }));
 }
 
-const cube1 = new Cube(new Vertex3D(0, 0, 0), 60, 60, 60);
-const cube2 = new Cube(new Vertex3D(0, 0, 100), 60, 60, 60);
+const cube1 = new Cube(new Vertex3D(30, 80, 100), 60, 60, 60, Color.red);
+// const cube2 = new Cube(new Vertex3D(100, 100, 150), 60, 60, 60, Color.blue);
+// const cube3 = new Cube(new Vertex3D(200, 200, 180), 60, 60, 60, Color.green);
+// const cube4 = new Cube(new Vertex3D(-100, 0, 40), 60, 60, 60, Color.orange);
+// const cube5 = new Cube(new Vertex3D(-100, 140, 100), 60, 60, 60, Color.pink);
 const objects = [ 
-  // cube1, 
-  cube2,
+  cube1,
+  // cube2,
+  // cube3,
+  // cube4,
+  // cube5,
 ];
 
 function autorotate() {

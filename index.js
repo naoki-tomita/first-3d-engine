@@ -95,7 +95,7 @@ var Model = /** @class */ (function () {
 }());
 var Cube = /** @class */ (function (_super) {
     __extends(Cube, _super);
-    function Cube(initialPoint, width, height, depth) {
+    function Cube(initialPoint, width, height, depth, color) {
         var _this = this;
         var w = width / 2, h = height / 2, d = depth / 2, p = initialPoint;
         var v = [
@@ -111,18 +111,18 @@ var Cube = /** @class */ (function (_super) {
         var f = [
             // 頂点の順序はとても大切。
             // 頂点の順序によって面の生成方向を決める。v1 -> v2 のベクトルと v2 -> v3 のベクトルの外積を法線ベクトルとする。
-            new Face(v[2], v[1], v[0], Color.red),
-            new Face(v[2], v[3], v[1], Color.red),
-            new Face(v[6], v[3], v[2], Color.blue),
-            new Face(v[7], v[3], v[6], Color.blue),
-            new Face(v[3], v[5], v[1], Color.green),
-            new Face(v[3], v[7], v[5], Color.green),
-            new Face(v[5], v[6], v[4], Color.orange),
-            new Face(v[7], v[6], v[5], Color.orange),
-            new Face(v[6], v[2], v[0], Color.yellow),
-            new Face(v[4], v[6], v[0], Color.yellow),
-            new Face(v[1], v[4], v[0], Color.purple),
-            new Face(v[5], v[4], v[1], Color.purple),
+            new Face(v[2], v[1], v[0], color),
+            new Face(v[2], v[3], v[1], color),
+            new Face(v[6], v[3], v[2], color),
+            new Face(v[7], v[3], v[6], color),
+            new Face(v[3], v[5], v[1], color),
+            new Face(v[3], v[7], v[5], color),
+            new Face(v[5], v[6], v[4], color),
+            new Face(v[7], v[6], v[5], color),
+            new Face(v[6], v[2], v[0], color),
+            new Face(v[4], v[6], v[0], color),
+            new Face(v[1], v[4], v[0], color),
+            new Face(v[5], v[4], v[1], color),
         ];
         _this = _super.call(this, v, f) || this;
         return _this;
@@ -130,10 +130,11 @@ var Cube = /** @class */ (function (_super) {
     return Cube;
 }(Model));
 function project(vertex3d) {
-    // カメラと像を投影するスクリーンの距離
+    // // カメラと像を投影するスクリーンの距離
     var d = 200;
     var r = d / vertex3d.z;
     return new Vertex2D(r * vertex3d.x, r * vertex3d.y);
+    // return new Vertex2D(vertex3d.x, vertex3d.y);
 }
 function vector(v1, v2) {
     return new Vertex3D(v1.x - v2.x, v1.y - v2.y, v1.z - v2.z);
@@ -161,7 +162,7 @@ function isDisplay(face) {
     // 外積(法線ベクトル)をとって
     var facevec = crossProduct(v1, v2);
     // 法線ベクトルの奥行き(=y)が負(=カメラ方向を向いている)であれば、表示していい
-    if (facevec.z > 0) {
+    if (facevec.z >= 0) {
         return true;
     }
     return false;
@@ -170,26 +171,34 @@ function isDisplay(face) {
 function render(objects, ctx, dx, dy) {
     ctx.strokeStyle = "rgba(0, 0, 0, 1)";
     ctx.clearRect(0, 0, dx * 2, dy * 2);
-    objects.forEach(function (obj) { return obj.faces.forEach(function (face) {
-        if (!isDisplay(face)) {
-            return;
-        }
-        var v1 = project(face.vertex1), v2 = project(face.vertex2), v3 = project(face.vertex3);
-        ctx.beginPath();
-        ctx.moveTo(v1.x + dx, -v1.y + dy);
-        ctx.lineTo(v2.x + dx, -v2.y + dy);
-        ctx.lineTo(v3.x + dx, -v3.y + dy);
-        ctx.closePath();
-        ctx.stroke();
-        ctx.fillStyle = face.color.get();
-        ctx.fill();
-    }); });
+    objects
+        .sort(function (a, b) { return b.getCenter().z - a.getCenter().z; })
+        .forEach(function (obj) {
+        return obj.faces
+            .sort(function (a, b) { return b.getCenter().z - a.getCenter().z; })
+            .forEach(function (face) {
+            if (!isDisplay(face)) {
+                return;
+            }
+            var v1 = project(face.vertex1), v2 = project(face.vertex2), v3 = project(face.vertex3);
+            ctx.beginPath();
+            ctx.moveTo(v1.x + dx, -v1.y + dy);
+            ctx.lineTo(v2.x + dx, -v2.y + dy);
+            ctx.lineTo(v3.x + dx, -v3.y + dy);
+            ctx.closePath();
+            ctx.stroke();
+            ctx.fillStyle = face.color.get();
+            ctx.fill();
+        });
+    });
 }
-var cube1 = new Cube(new Vertex3D(0, 0, 0), 60, 60, 60);
-var cube2 = new Cube(new Vertex3D(0, 0, 100), 60, 60, 60);
+var cube1 = new Cube(new Vertex3D(30, 80, 100), 60, 60, 60, Color.red);
+// const cube2 = new Cube(new Vertex3D(100, 100, 150), 60, 60, 60, Color.blue);
+// const cube3 = new Cube(new Vertex3D(200, 200, 180), 60, 60, 60, Color.green);
+// const cube4 = new Cube(new Vertex3D(-100, 0, 40), 60, 60, 60, Color.orange);
+// const cube5 = new Cube(new Vertex3D(-100, 140, 100), 60, 60, 60, Color.pink);
 var objects = [
-    // cube1, 
-    cube2,
+    cube1,
 ];
 function autorotate() {
     objects.forEach(function (o) {
