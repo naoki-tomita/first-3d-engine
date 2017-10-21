@@ -6,6 +6,7 @@
   "license": "MIT",
   "dependencies": {
     "@types/webpack": "^3.0.13",
+    "awesome-typescript-loader": "^3.2.3",
     "chokidar-cli": "^1.2.0",
     "local-web-server": "^2.2.4",
     "npm-run-all": "^4.1.1",
@@ -15,7 +16,7 @@
   },
   "scripts": {
     "start": "run-p watch serve",
-    "build": "tsc ./index.ts",
+    "build": "webpack",
     "watch": "chokidar \"./index.ts\" \"./scripts/**/*.ts\" -c \"yarn build\"",
     "serve": "ws"
   }

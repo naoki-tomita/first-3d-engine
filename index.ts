@@ -2,15 +2,17 @@ import {
   Color,
   Face,
   Matrix,
+  Model,
   Vertex3D, 
   Vertex2D,
   Vector,
+  Stage,
   render,
   orthographicViewProjection as project,
 } from "./scripts/Engine";
 import {
-  Model,
   Cube,
+  Plane,
 } from "./scripts/Models";
 
 const c = (document.getElementById("canvas") as HTMLCanvasElement).getContext("2d");
@@ -28,33 +30,24 @@ function isDisplay(face: Face) {
   return false;
 }
 
-
-
-const light = new Vertex3D(-1, -1, -1);
-const cube1 = new Cube(new Vertex3D(30, 80, 100), 60, 60, 60, Color.red);
-// const cube2 = new Cube(new Vertex3D(100, 100, 150), 60, 60, 60, Color.blue);
-// const cube3 = new Cube(new Vertex3D(200, 200, 180), 60, 60, 60, Color.green);
-// const cube4 = new Cube(new Vertex3D(-100, 0, 80), 60, 60, 60, Color.orange);
-// const cube5 = new Cube(new Vertex3D(-100, 140, 100), 60, 60, 60, Color.pink);
+const cube = new Cube(new Vertex3D(30, 80, 100), 60, 60, 60, Color.red);
+const plane = new Plane(new Vertex3D(100, -100, 120), 100, 100, Color.blue);
 const objects = [ 
-  cube1,
-  // cube2,
-  // cube3,
-  // cube4,
-  // cube5,
+  cube,
+  plane,
 ];
+const stage = new Stage(objects);
 
 function autorotate() {
-  objects.forEach(o => {
-    o.rotate(Math.PI / 360, Math.PI / 720);
-  });
+  objects[0].rotate(Math.PI / 360, Math.PI / 720);
   render({ 
-    objects, 
+    stage,
     context: c,
     canvasSize: { 
       width: 500, 
-      height: 250 
+      height: 500, 
     },
+    projectMethod: project,
   });
   setTimeout(autorotate, 10);
 }
@@ -83,8 +76,8 @@ function keymove() {
       break;
   }
   currentKey = 0;
-  objects[0].move(dx, dy, dz);
-  setTimeout(keymove, 1000/30);
+  objects[1].move(dx, dy, dz);
+  setTimeout(keymove, 1000 / 30);
 }
 
 keymove();

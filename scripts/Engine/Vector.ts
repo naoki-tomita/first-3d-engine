@@ -10,12 +10,12 @@ export class Vector {
       this.y = y;
       this.z = z;
     } else if (Vector.isVector(x) && Vector.isVector(y)) {
-      this.x = x.x - y.x;
-      this.y = x.y - y.y;
-      this.z = x.z - y.z;
+      this.x = y.x - x.x;
+      this.y = y.y - x.y;
+      this.z = y.z - x.z;
     }
   }
-  static isVector(arg): arg is Vector {
+  static isVector(arg: any): arg is Vector {
     return isNumber(arg.x) && isNumber(arg.y) && isNumber(arg.z)
   }
 }

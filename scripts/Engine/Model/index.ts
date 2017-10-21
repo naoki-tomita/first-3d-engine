@@ -39,4 +39,7 @@ export class Model {
       v.z += dz;
     });
   }
+  zsort() {
+    return this.faces.slice().sort((a, b) => b.getCenter().z - a.getCenter().z);
+  }
 }
