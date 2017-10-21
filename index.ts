@@ -1,209 +1,19 @@
+import { 
+  Color,
+  Face,
+  Matrix,
+  Vertex3D, 
+  Vertex2D,
+  Vector,
+  render,
+  orthographicViewProjection as project,
+} from "./scripts/Engine";
+import {
+  Model,
+  Cube,
+} from "./scripts/Models";
+
 const c = (document.getElementById("canvas") as HTMLCanvasElement).getContext("2d");
-
-class Vertex3D {
-  x: number;
-  y: number;
-  z: number;
-  constructor(x: number, y: number, z: number) {
-    this.x = x;
-    this.y = y;
-    this.z = z;
-  }
-}
-
-function isNumber(arg: any): arg is number {
-  return typeof arg === "number";
-}
-
-class Vector {
-  x: number;
-  y: number;
-  z: number;
-  constructor(x: number | Vector, y: number | Vector, z?: number) {
-    if (isNumber(x) && isNumber(y) && isNumber(z)) {
-      this.x = x;
-      this.y = y;
-      this.z = z;
-    } else if (Vector.isVector(x) && Vector.isVector(y)) {
-      this.x = x.x - y.x;
-      this.y = x.y - y.y;
-      this.z = x.z - y.z;
-    }
-  }
-  static isVector(arg): arg is Vector {
-    return isNumber(arg.x) && isNumber(arg.y) && isNumber(arg.z)
-  }
-}
-
-class Vertex2D {
-  x: number;
-  y: number;
-  constructor(x: number, y: number) {
-    this.x = x;
-    this.y = y;
-  }
-}
-
-class Matrix {
-  // 内積をとる
-  static dotProduct(v1: Vector, v2: Vector): number {
-    return v1.x * v2.x + v1.y * v2.y + v1.x * v2.y;
-  }
-
-  // 外積をとる
-  static crossProduct(v1: Vector, v2: Vector) {
-    return new Vertex3D(v1.y * v2.z - v1.z * v2.y,
-                        v1.x * v2.z - v1.z * v2.x,
-                        v1.x * v2.y - v1.y * v2.x);
-  }
-
-  // ベクトルのノルム(長さ)を計算する
-  static norm(v: Vector) {
-    return Math.sqrt(
-      Math.pow(v.x, 2) + Math.pow(v.y, 2) + Math.pow(v.z, 2)
-    );
-  }
-
-  // ベクトルのなす角というやつ
-  // この計算自体は cos theta を出すための計算なのだけど、関数名が思いつかなかった。
-  // thetaは計算不要のはず。
-  static vectorAngle(v1: Vector, v2: Vector) {
-    return this.dotProduct(v1, v2) / (this.norm(v1) * this.norm(v2));
-  }
-}
-
-class Color {
-  r: number;
-  g: number;
-  b: number;
-  a: number;
-  constructor(r: number, g: number, b: number, a?: number) {
-    this.r = r;
-    this.g = g;
-    this.b = b;
-    this.a = a || 1;
-  }
-  get(x: number = 1) {
-    return `rgba(${Math.floor(this.r * x)},${Math.floor(this.g * x)},${Math.floor(this.b * x)},${this.a})`;
-  }
-  static red:    Color = new Color(255, 0, 0)
-  static green:  Color = new Color(0, 255, 0)
-  static blue:   Color = new Color(0, 0, 255)
-  static yellow: Color = new Color(255, 255, 0)
-  static pink:   Color = new Color(255, 20, 147)
-  static orange: Color = new Color(255, 99, 71)
-  static cyan:   Color = new Color(0, 255, 255)
-  static purple: Color = new Color(255, 0, 255)
-}
-
-class Face {
-  vertex1: Vertex3D;
-  vertex2: Vertex3D;
-  vertex3: Vertex3D;
-  color: Color;
-  constructor(v1: Vertex3D, v2: Vertex3D, v3: Vertex3D, c: Color) {
-    this.vertex1 = v1;
-    this.vertex2 = v2;
-    this.vertex3 = v3;
-    this.color = c;
-  }
-  getCenter() {
-    const x = ( this.vertex1.x + this.vertex2.x + this.vertex3.x ) / 3;
-    const y = ( this.vertex1.y + this.vertex2.y + this.vertex3.y ) / 3;
-    const z = ( this.vertex1.z + this.vertex2.z + this.vertex3.z ) / 3;
-    return new Vertex3D(x, y, z);
-  }
-  getNormalVector(): Vector {
-    return Matrix.crossProduct(new Vector(this.vertex1, this.vertex2), new Vector(this.vertex2, this.vertex3));
-  }
-}
-
-class Model {
-  vertices: Vertex3D[];
-  faces: Face[];
-  constructor(vertices: Vertex3D[], faces: Face[]) {
-    this.vertices = vertices;
-    this.faces = faces;
-  }
-  getCenter() {
-    let sumX = 0, sumY = 0, sumZ = 0;
-
-    this.vertices.forEach((v) => {
-      sumX += v.x;
-      sumY += v.y;
-      sumZ += v.z;
-    });
-    const count = this.vertices.length;
-    return new Vertex3D(sumX / count, sumY / count, sumZ / count);
-  }
-  rotate(theta: number, phi: number) {
-    const center = this.getCenter();
-    const ct = Math.cos(theta), st = Math.sin(theta), cp = Math.cos(phi), sp = Math.sin(phi);
-
-    this.vertices.forEach((v) => {
-      const x = v.x - center.x,
-            y = v.y - center.y,
-            z = v.z - center.z;
-
-      v.x = ct * x - st * cp * z + st * sp * y + center.x;
-      v.z = st * x + ct * cp * z - ct * sp * y + center.z;
-      v.y = sp * z + cp * y + center.y;
-    });
-  }
-  move(dx: number, dy: number, dz: number) {
-    this.vertices.forEach((v)=> {
-      v.x += dx;
-      v.y += dy;
-      v.z += dz;
-    });
-  }
-}
-
-class Cube extends Model {
-  constructor(initialPoint: Vertex3D, width: number, height: number, depth: number, color: Color) {
-    const w = width/2, h = height/2, d = depth/2, p = initialPoint;
-    const v = [
-      new Vertex3D(p.x - w, p.y - d, p.z - h),
-      new Vertex3D(p.x + w, p.y - d, p.z - h),
-      new Vertex3D(p.x - w, p.y - d, p.z + h),
-      new Vertex3D(p.x + w, p.y - d, p.z + h),
-      new Vertex3D(p.x - w, p.y + d, p.z - h),
-      new Vertex3D(p.x + w, p.y + d, p.z - h),
-      new Vertex3D(p.x - w, p.y + d, p.z + h),
-      new Vertex3D(p.x + w, p.y + d, p.z + h),
-    ];
-    const f = [
-      // 頂点の順序はとても大切。
-      // 頂点の順序によって面の生成方向を決める。v1 -> v2 のベクトルと v2 -> v3 のベクトルの外積を法線ベクトルとする。
-      new Face(v[2], v[1], v[0], color),
-      new Face(v[2], v[3], v[1], color),
-      new Face(v[6], v[3], v[2], color),
-      new Face(v[7], v[3], v[6], color),
-      new Face(v[3], v[5], v[1], color),
-      new Face(v[3], v[7], v[5], color),
-      new Face(v[5], v[6], v[4], color),
-      new Face(v[7], v[6], v[5], color),
-      new Face(v[6], v[2], v[0], color),
-      new Face(v[4], v[6], v[0], color),
-      new Face(v[1], v[4], v[0], color),
-      new Face(v[5], v[4], v[1], color),
-    ];
-    super(v, f);
-  }
-}
-
-function project(vertex3d: Vertex3D) {
-  // // カメラと像を投影するスクリーンの距離
-  var d = 200;
-  var r = d / vertex3d.z;
-
-  return new Vertex2D(r * vertex3d.x, r * vertex3d.y);
-  // return new Vertex2D(vertex3d.x, vertex3d.y);
-}
-
-function vector(v1: Vertex3D, v2: Vertex3D) {
-  return new Vertex3D(v1.x - v2.x, v1.y - v2.y, v1.z - v2.z);
-}
 
 // カリング処理用。いまのところ透視図法だとうまくいかない。
 function isDisplay(face: Face) {
@@ -218,30 +28,7 @@ function isDisplay(face: Face) {
   return false;
 }
 
-// dx, dy は 画面の中心を設定する。そこを中心に画像が生成される
-function render(objects: Model[], ctx: CanvasRenderingContext2D, dx: number, dy: number) {
-  ctx.clearRect(0, 0, dx * 2, dy * 2);
-  objects
-  .sort((a, b) => b.getCenter().z - a.getCenter().z)
-  .forEach((obj) => obj.faces
-  .sort((a, b) => b.getCenter().z - a.getCenter().z)
-  .forEach((face) => {
-    const color = face.color.get(1-(((Matrix.vectorAngle(face.getNormalVector(), light) + 1) / 2)));
-    const v1 = project(face.vertex1), 
-          v2 = project(face.vertex2), 
-          v3 = project(face.vertex3);
-    
-    ctx.beginPath();
-    ctx.moveTo(v1.x + dx, -v1.y + dy);
-    ctx.lineTo(v2.x + dx, -v2.y + dy);
-    ctx.lineTo(v3.x + dx, -v3.y + dy);
-    ctx.closePath();
-    ctx.strokeStyle = color;
-    ctx.fillStyle = color;
-    ctx.stroke();
-    ctx.fill();
-  }));
-}
+
 
 const light = new Vertex3D(-1, -1, -1);
 const cube1 = new Cube(new Vertex3D(30, 80, 100), 60, 60, 60, Color.red);
@@ -261,7 +48,14 @@ function autorotate() {
   objects.forEach(o => {
     o.rotate(Math.PI / 360, Math.PI / 720);
   });
-  render(objects, c, 250, 250);
+  render({ 
+    objects, 
+    context: c,
+    canvasSize: { 
+      width: 500, 
+      height: 250 
+    },
+  });
   setTimeout(autorotate, 10);
 }
 

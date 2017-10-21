@@ -5,15 +5,18 @@
   "author": "naoki-tomita <naoki.tomita@jrits.ricoh.co.jp>",
   "license": "MIT",
   "dependencies": {
+    "@types/webpack": "^3.0.13",
     "chokidar-cli": "^1.2.0",
     "local-web-server": "^2.2.4",
     "npm-run-all": "^4.1.1",
-    "typescript": "^2.5.3"
+    "ts-node": "^3.3.0",
+    "typescript": "^2.5.3",
+    "webpack": "^3.8.1"
   },
   "scripts": {
     "start": "run-p watch serve",
-    "build": "tsc index.ts",
-    "watch": "chokidar \"./index.ts\" -c \"yarn build\"",
+    "build": "tsc ./index.ts",
+    "watch": "chokidar \"./index.ts\" \"./scripts/**/*.ts\" -c \"yarn build\"",
     "serve": "ws"
   }
 }
