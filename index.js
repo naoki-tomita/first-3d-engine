@@ -17,12 +17,56 @@ var Vertex3D = /** @class */ (function () {
     }
     return Vertex3D;
 }());
+function isNumber(arg) {
+    return typeof arg === "number";
+}
+var Vector = /** @class */ (function () {
+    function Vector(x, y, z) {
+        if (isNumber(x) && isNumber(y) && isNumber(z)) {
+            this.x = x;
+            this.y = y;
+            this.z = z;
+        }
+        else if (Vector.isVector(x) && Vector.isVector(y)) {
+            this.x = x.x - y.x;
+            this.y = x.y - y.y;
+            this.z = x.z - y.z;
+        }
+    }
+    Vector.isVector = function (arg) {
+        return isNumber(arg.x) && isNumber(arg.y) && isNumber(arg.z);
+    };
+    return Vector;
+}());
 var Vertex2D = /** @class */ (function () {
     function Vertex2D(x, y) {
         this.x = x;
         this.y = y;
     }
     return Vertex2D;
+}());
+var Matrix = /** @class */ (function () {
+    function Matrix() {
+    }
+    // 内積をとる
+    Matrix.dotProduct = function (v1, v2) {
+        return v1.x * v2.x + v1.y * v2.y + v1.x * v2.y;
+    };
+    // 外積をとる
+    Matrix.crossProduct = function (v1, v2) {
+        return new Vertex3D(v1.y * v2.z - v1.z * v2.y, v1.x * v2.z - v1.z * v2.x, v1.x * v2.y - v1.y * v2.x);
+    };
+    // ベクトルのノルム(長さ)を計算する
+    Matrix.norm = function (v) {
+        return Math.sqrt(Math.pow(v.x, 2) + Math.pow(v.y, 2) + Math.pow(v.z, 2));
+    };
+    // ベクトルのなす角というやつ
+    // この計算自体は cos theta を出すための計算なのだけど、関数名が思いつかなかった。
+    // thetaは計算不要のはず。
+    Matrix.vectorAngle = function (v1, v2) {
+        return this.dotProduct(v1, v2) / (this.norm(v1) * this.norm(v2));
+    };
+    return Matrix;
 }());
 var Color = /** @class */ (function () {
     function Color(r, g, b, a) {
@@ -31,8 +75,9 @@ var Color = /** @class */ (function () {
         this.b = b;
         this.a = a || 1;
     }
-    Color.prototype.get = function () {
-        return "rgba(" + this.r + "," + this.g + "," + this.b + "," + this.a + ")";
+    Color.prototype.get = function (x) {
+        if (x === void 0) { x = 1; }
+        return "rgba(" + Math.floor(this.r * x) + "," + Math.floor(this.g * x) + "," + Math.floor(this.b * x) + "," + this.a + ")";
     };
     Color.red = new Color(255, 0, 0);
     Color.green = new Color(0, 255, 0);
@@ -56,6 +101,9 @@ var Face = /** @class */ (function () {
         var y = (this.vertex1.y + this.vertex2.y + this.vertex3.y) / 3;
         var z = (this.vertex1.z + this.vertex2.z + this.vertex3.z) / 3;
         return new Vertex3D(x, y, z);
+    };
+    Face.prototype.getNormalVector = function () {
+        return Matrix.crossProduct(new Vector(this.vertex1, this.vertex2), new Vector(this.vertex2, this.vertex3));
     };
     return Face;
 }());
@@ -139,29 +187,13 @@ function project(vertex3d) {
 function vector(v1, v2) {
     return new Vertex3D(v1.x - v2.x, v1.y - v2.y, v1.z - v2.z);
 }
-// ベクトルのなす角というやつ
-// この計算自体は cos theta を出すための計算なのだけど、関数名が思いつかなかった。
-// thetaは計算不要のはず。
-function vectorAngle(v1, v2) {
-    return dotProduct(v1, v2) / (norm(v1) * norm(v2));
-}
-function norm(v) {
-    return Math.sqrt(Math.pow(v.x, 2) + Math.pow(v.y, 2) + Math.pow(v.z, 2));
-}
-// 内積をとる
-function dotProduct(v1, v2) {
-    return v1.x * v2.x + v1.y * v2.y + v1.x * v2.y;
-}
-// 外積をとる
-function crossProduct(v1, v2) {
-    return new Vertex3D(v1.y * v2.z - v1.z * v2.y, v1.x * v2.z - v1.z * v2.x, v1.x * v2.y - v1.y * v2.x);
-}
+// カリング処理用。いまのところ透視図法だとうまくいかない。
 function isDisplay(face) {
-    var v1 = vector(face.vertex1, face.vertex2); // v1 -> v2のベクトル
-    var v2 = vector(face.vertex2, face.vertex3); // v2 -> v3のベクトル
+    var v1 = new Vector(face.vertex1, face.vertex2); // v1 -> v2のベクトル
+    var v2 = new Vector(face.vertex2, face.vertex3); // v2 -> v3のベクトル
     // 外積(法線ベクトル)をとって
-    var facevec = crossProduct(v1, v2);
-    // 法線ベクトルの奥行き(=y)が負(=カメラ方向を向いている)であれば、表示していい
+    var facevec = Matrix.crossProduct(v1, v2);
+    // 法線ベクトルの奥行き(=z)が正(=カメラ方向を向いている)であれば、表示していい(奥に行くほうzが大きくなる)
     if (facevec.z >= 0) {
         return true;
     }
@@ -169,33 +201,30 @@ function isDisplay(face) {
 }
 // dx, dy は 画面の中心を設定する。そこを中心に画像が生成される
 function render(objects, ctx, dx, dy) {
-    ctx.strokeStyle = "rgba(0, 0, 0, 1)";
     ctx.clearRect(0, 0, dx * 2, dy * 2);
     objects
         .sort(function (a, b) { return b.getCenter().z - a.getCenter().z; })
-        .forEach(function (obj) {
-        return obj.faces
-            .sort(function (a, b) { return b.getCenter().z - a.getCenter().z; })
-            .forEach(function (face) {
-            if (!isDisplay(face)) {
-                return;
-            }
-            var v1 = project(face.vertex1), v2 = project(face.vertex2), v3 = project(face.vertex3);
-            ctx.beginPath();
-            ctx.moveTo(v1.x + dx, -v1.y + dy);
-            ctx.lineTo(v2.x + dx, -v2.y + dy);
-            ctx.lineTo(v3.x + dx, -v3.y + dy);
-            ctx.closePath();
-            ctx.stroke();
-            ctx.fillStyle = face.color.get();
-            ctx.fill();
-        });
-    });
+        .forEach(function (obj) { return obj.faces
+        .sort(function (a, b) { return b.getCenter().z - a.getCenter().z; })
+        .forEach(function (face) {
+        var color = face.color.get(1 - (((Matrix.vectorAngle(face.getNormalVector(), light) + 1) / 2)));
+        var v1 = project(face.vertex1), v2 = project(face.vertex2), v3 = project(face.vertex3);
+        ctx.beginPath();
+        ctx.moveTo(v1.x + dx, -v1.y + dy);
+        ctx.lineTo(v2.x + dx, -v2.y + dy);
+        ctx.lineTo(v3.x + dx, -v3.y + dy);
+        ctx.closePath();
+        ctx.strokeStyle = color;
+        ctx.fillStyle = color;
+        ctx.stroke();
+        ctx.fill();
+    }); });
 }
+var light = new Vertex3D(-1, -1, -1);
 var cube1 = new Cube(new Vertex3D(30, 80, 100), 60, 60, 60, Color.red);
 // const cube2 = new Cube(new Vertex3D(100, 100, 150), 60, 60, 60, Color.blue);
 // const cube3 = new Cube(new Vertex3D(200, 200, 180), 60, 60, 60, Color.green);
-// const cube4 = new Cube(new Vertex3D(-100, 0, 40), 60, 60, 60, Color.orange);
+// const cube4 = new Cube(new Vertex3D(-100, 0, 80), 60, 60, 60, Color.orange);
 // const cube5 = new Cube(new Vertex3D(-100, 140, 100), 60, 60, 60, Color.pink);
 var objects = [
     cube1,

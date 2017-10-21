@@ -11,12 +11,64 @@ class Vertex3D {
   }
 }
 
+function isNumber(arg: any): arg is number {
+  return typeof arg === "number";
+}
+
+class Vector {
+  x: number;
+  y: number;
+  z: number;
+  constructor(x: number | Vector, y: number | Vector, z?: number) {
+    if (isNumber(x) && isNumber(y) && isNumber(z)) {
+      this.x = x;
+      this.y = y;
+      this.z = z;
+    } else if (Vector.isVector(x) && Vector.isVector(y)) {
+      this.x = x.x - y.x;
+      this.y = x.y - y.y;
+      this.z = x.z - y.z;
+    }
+  }
+  static isVector(arg): arg is Vector {
+    return isNumber(arg.x) && isNumber(arg.y) && isNumber(arg.z)
+  }
+}
+
 class Vertex2D {
   x: number;
   y: number;
   constructor(x: number, y: number) {
     this.x = x;
     this.y = y;
+  }
+}
+
+class Matrix {
+  // 内積をとる
+  static dotProduct(v1: Vector, v2: Vector): number {
+    return v1.x * v2.x + v1.y * v2.y + v1.x * v2.y;
+  }
+
+  // 外積をとる
+  static crossProduct(v1: Vector, v2: Vector) {
+    return new Vertex3D(v1.y * v2.z - v1.z * v2.y,
+                        v1.x * v2.z - v1.z * v2.x,
+                        v1.x * v2.y - v1.y * v2.x);
+  }
+
+  // ベクトルのノルム(長さ)を計算する
+  static norm(v: Vector) {
+    return Math.sqrt(
+      Math.pow(v.x, 2) + Math.pow(v.y, 2) + Math.pow(v.z, 2)
+    );
+  }
+
+  // ベクトルのなす角というやつ
+  // この計算自体は cos theta を出すための計算なのだけど、関数名が思いつかなかった。
+  // thetaは計算不要のはず。
+  static vectorAngle(v1: Vector, v2: Vector) {
+    return this.dotProduct(v1, v2) / (this.norm(v1) * this.norm(v2));
   }
 }
 
@@ -31,8 +83,8 @@ class Color {
     this.b = b;
     this.a = a || 1;
   }
-  get() {
-    return `rgba(${this.r},${this.g},${this.b},${this.a})`;
+  get(x: number = 1) {
+    return `rgba(${Math.floor(this.r * x)},${Math.floor(this.g * x)},${Math.floor(this.b * x)},${this.a})`;
   }
   static red:    Color = new Color(255, 0, 0)
   static green:  Color = new Color(0, 255, 0)
@@ -60,6 +112,9 @@ class Face {
     const y = ( this.vertex1.y + this.vertex2.y + this.vertex3.y ) / 3;
     const z = ( this.vertex1.z + this.vertex2.z + this.vertex3.z ) / 3;
     return new Vertex3D(x, y, z);
+  }
+  getNormalVector(): Vector {
+    return Matrix.crossProduct(new Vector(this.vertex1, this.vertex2), new Vector(this.vertex2, this.vertex3));
   }
 }
 
@@ -150,36 +205,12 @@ function vector(v1: Vertex3D, v2: Vertex3D) {
   return new Vertex3D(v1.x - v2.x, v1.y - v2.y, v1.z - v2.z);
 }
 
-// ベクトルのなす角というやつ
-// この計算自体は cos theta を出すための計算なのだけど、関数名が思いつかなかった。
-// thetaは計算不要のはず。
-function vectorAngle(v1: Vertex3D, v2: Vertex3D) {
-  return dotProduct(v1, v2) / (norm(v1) * norm(v2));
-}
-
-function norm(v: Vertex3D) {
-  return Math.sqrt(
-    Math.pow(v.x, 2) + Math.pow(v.y, 2) + Math.pow(v.z, 2)
-  );
-}
-
-// 内積をとる
-function dotProduct(v1: Vertex3D, v2: Vertex3D) {
-  return v1.x * v2.x + v1.y * v2.y + v1.x * v2.y;
-}
-
-// 外積をとる
-function crossProduct(v1: Vertex3D, v2: Vertex3D) {
-  return new Vertex3D(v1.y * v2.z - v1.z * v2.y,
-                      v1.x * v2.z - v1.z * v2.x,
-                      v1.x * v2.y - v1.y * v2.x);
-}
-
+// カリング処理用。いまのところ透視図法だとうまくいかない。
 function isDisplay(face: Face) {
-  const v1 = vector(face.vertex1, face.vertex2); // v1 -> v2のベクトル
-  const v2 = vector(face.vertex2, face.vertex3); // v2 -> v3のベクトル
+  const v1 = new Vector(face.vertex1, face.vertex2); // v1 -> v2のベクトル
+  const v2 = new Vector(face.vertex2, face.vertex3); // v2 -> v3のベクトル
   // 外積(法線ベクトル)をとって
-  const facevec = crossProduct(v1, v2);
+  const facevec = Matrix.crossProduct(v1, v2);
   // 法線ベクトルの奥行き(=z)が正(=カメラ方向を向いている)であれば、表示していい(奥に行くほうzが大きくなる)
   if (facevec.z >= 0) {
     return true;
@@ -189,36 +220,34 @@ function isDisplay(face: Face) {
 
 // dx, dy は 画面の中心を設定する。そこを中心に画像が生成される
 function render(objects: Model[], ctx: CanvasRenderingContext2D, dx: number, dy: number) {
-  ctx.strokeStyle = `rgba(0, 0, 0, 1)`;
   ctx.clearRect(0, 0, dx * 2, dy * 2);
   objects
-    .sort((a, b) => b.getCenter().z - a.getCenter().z)
-      .forEach((obj) => 
-        obj.faces
-          .sort((a, b) => b.getCenter().z - a.getCenter().z)
-            .forEach((face) => {
-    if(!isDisplay(face)) {
-      return;
-    }
+  .sort((a, b) => b.getCenter().z - a.getCenter().z)
+  .forEach((obj) => obj.faces
+  .sort((a, b) => b.getCenter().z - a.getCenter().z)
+  .forEach((face) => {
+    const color = face.color.get(1-(((Matrix.vectorAngle(face.getNormalVector(), light) + 1) / 2)));
     const v1 = project(face.vertex1), 
           v2 = project(face.vertex2), 
           v3 = project(face.vertex3);
-
+    
     ctx.beginPath();
     ctx.moveTo(v1.x + dx, -v1.y + dy);
     ctx.lineTo(v2.x + dx, -v2.y + dy);
     ctx.lineTo(v3.x + dx, -v3.y + dy);
     ctx.closePath();
+    ctx.strokeStyle = color;
+    ctx.fillStyle = color;
     ctx.stroke();
-    ctx.fillStyle = face.color.get();
     ctx.fill();
   }));
 }
 
+const light = new Vertex3D(-1, -1, -1);
 const cube1 = new Cube(new Vertex3D(30, 80, 100), 60, 60, 60, Color.red);
 // const cube2 = new Cube(new Vertex3D(100, 100, 150), 60, 60, 60, Color.blue);
 // const cube3 = new Cube(new Vertex3D(200, 200, 180), 60, 60, 60, Color.green);
-// const cube4 = new Cube(new Vertex3D(-100, 0, 40), 60, 60, 60, Color.orange);
+// const cube4 = new Cube(new Vertex3D(-100, 0, 80), 60, 60, 60, Color.orange);
 // const cube5 = new Cube(new Vertex3D(-100, 140, 100), 60, 60, 60, Color.pink);
 const objects = [ 
   cube1,
