@@ -1,24 +1,16 @@
 import { 
-  Color,
-  Face,
-  Matrix,
-  Model,
-  Vertex3D, 
-  Vertex2D,
-  Vector,
-  Stage,
-  render,
+  Color, Face, Matrix,
+  Model, Vertex3D, Vertex2D,
+  Vector, Stage, render,
   orthographicViewProjection as project,
-  normalCulling,
-  visibleCulling,
+  normalCulling, visibleCulling,
   convert,
 } from "./scripts/Engine";
 import {
-  Cube,
-  Plane,
+  Cube, Plane,
 } from "./scripts/Models";
 
-const cup = require("./scripts/Models/Cup.json");
+const cupJson = require("./scripts/Models/Cup.json");
 
 const c = (document.getElementById("canvas") as HTMLCanvasElement).getContext("2d");
 
@@ -36,12 +28,12 @@ function isDisplay(face: Face) {
 }
 
 const cube = new Cube(new Vertex3D(0, 0, 100), 60, 60, 60, Color.red);
-const cupModel = convert(cup);
-cupModel.move(0, 0, 2);
+const cup = convert(cupJson);
+cup.move(0, 0, 2);
 
 const objects = [ 
   // cube,
-  cupModel,
+  cup,
 ];
 const stage = new Stage(objects);
 

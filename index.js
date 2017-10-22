@@ -390,7 +390,7 @@ exports.Model = Model;
 Object.defineProperty(exports, "__esModule", { value: true });
 var Engine_1 = __webpack_require__(0);
 var Models_1 = __webpack_require__(12);
-var cup = __webpack_require__(15);
+var cupJson = __webpack_require__(15);
 var c = document.getElementById("canvas").getContext("2d");
 // カリング処理用。いまのところ透視図法だとうまくいかない。
 function isDisplay(face) {
@@ -405,11 +405,11 @@ function isDisplay(face) {
     return false;
 }
 var cube = new Models_1.Cube(new Engine_1.Vertex3D(0, 0, 100), 60, 60, 60, Engine_1.Color.red);
-var cupModel = Engine_1.convert(cup);
-cupModel.move(0, 0, 2);
+var cup = Engine_1.convert(cupJson);
+cup.move(0, 0, 2);
 var objects = [
     // cube,
-    cupModel,
+    cup,
 ];
 var stage = new Engine_1.Stage(objects);
 function autorotate() {
