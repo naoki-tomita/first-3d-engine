@@ -9,11 +9,16 @@ import {
   Stage,
   render,
   orthographicViewProjection as project,
+  normalCulling,
+  visibleCulling,
+  convert,
 } from "./scripts/Engine";
 import {
   Cube,
   Plane,
 } from "./scripts/Models";
+
+const cup = require("./scripts/Models/Cup.json");
 
 const c = (document.getElementById("canvas") as HTMLCanvasElement).getContext("2d");
 
@@ -31,28 +36,31 @@ function isDisplay(face: Face) {
 }
 
 const cube = new Cube(new Vertex3D(0, 0, 100), 60, 60, 60, Color.red);
-// const plane = new Plane(new Vertex3D(100, -100, 120), 100, 100, Color.blue);
+const cupModel = convert(cup);
+
 const objects = [ 
-  cube,
-  // plane,
+  // cube,
+  cupModel,
 ];
 const stage = new Stage(objects);
 
 function autorotate() {
   objects[0].rotate(Math.PI / 360, Math.PI / 720);
-  render({ 
-    stage,
+  render(stage, {
     context: c,
     canvasSize: { 
       width: 500, 
       height: 500, 
     },
-    projectMethod: project,
+    projectionMethod: project,
+    cullingMethod: function(face: Face) {
+      return normalCulling(face) && visibleCulling(face);
+    }
   });
   setTimeout(autorotate, 10);
 }
 
-// autorotate();
+autorotate();
 
 let currentKey = 0;
 document.addEventListener("keydown", (e) => {
@@ -66,29 +74,20 @@ function keymove() {
       dx -= 1;
       break;
     case 38:
-      dy += 1;
+      dz += 1;
       break;
     case 39:
       dx += 1;
       break;
     case 40:
-      dy -= 1;
+      dz -= 1;
       break;
     default:
       setTimeout(keymove, 1000 / 30);
       return;
   }
   currentKey = 0;
-  objects[0].rotate((Math.PI / 90) * dx, (Math.PI / 90) * dy);
-  render({ 
-    stage,
-    context: c,
-    canvasSize: { 
-      width: 500, 
-      height: 500, 
-    },
-    projectMethod: project,
-  });
+  objects[0].move(dx, dy, dz);
   setTimeout(keymove, 1000 / 30);
 }
 

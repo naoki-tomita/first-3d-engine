@@ -8,13 +8,23 @@ import { Stage } from "./Stage";
 import { Face } from "./Face";
 
 export { Model } from "./Model";
+export { convert } from "./Model/Convert";
 export { Vertex2D, Vertex3D, Vector, Matrix, Color, Stage, Face };
 
 export type Project = (vertex3d: Vertex3D) => Vertex2D;
+export type Culling = (face: Face) => boolean;
 
 interface CanvasSize {
   width: number; 
   height: number;
+}
+
+interface RenderContext {
+  context: CanvasRenderingContext2D,
+  canvasSize: CanvasSize,
+  light?: Vector,
+  projectionMethod?: Project,
+  cullingMethod?: Culling,
 }
 
 export const orthographicViewProjection: Project = (vertex3d: Vertex3D) => {
@@ -29,73 +39,91 @@ export const perspectiveViewProjection: Project = (vertex3d: Vertex3D) => {
   return new Vertex2D(vertex3d.x, vertex3d.y);
 }
 
-// dx, dy は 画面の中心を設定する。そこを中心に画像が生成される
-export function render(options: {
-  stage: Stage;
-  context: CanvasRenderingContext2D;
-  canvasSize: CanvasSize;
-  light?: Vector;
-  projectMethod?: Project;
-}) {
-  function renderFace(face: Face) {
-    const color = face.color.get(1 - ((Matrix.vectorAngle(face.getNormalVector(), light) + 1) / 2));
-    const v1 = project(face.vertex1), 
-          v2 = project(face.vertex2), 
-          v3 = project(face.vertex3);
-    draw(context, v1, v2, v3, color, canvasSize);
+// 面がカメラを向いていない場合に表示しないカリング
+export const normalCulling: Culling = (face: Face) => {
+  // ベクトルのなす角(カメラから面の中心に向かうベクトル, 面の法線ベクトル)を出す。
+  // 結果は cosθ の値がえられる。(-1 ~ 1)
+  // 0 ~ 1の範囲が 90°未満であるため、その場合にのみ表示してよい。
+  const angle = Matrix.vectorAngle(
+    // 面の法線ベクトル
+    face.getNormalVector().normalize(), 
+    // カメラから面の中心に向かうベクトル
+    face.getCenter().toVector());
+  if (angle < 0) {
+    return true;
   }
-
-  function renderNormalVector(face: Face) {
-    const center = face.getCenter();
-    const normalVec = face.getNormalVector().normalize(20);
-    const point = new Vertex3D(center.x + normalVec.x, center.y + normalVec.y, center.z + normalVec.z);
-    const f = new Face(center, point, center, face.color);
-    renderFace(f);
-  }
-
-  const { 
-    stage, 
-    context, 
-    canvasSize,
-    light = new Vector(1, -1, 1),
-    projectMethod: project = perspectiveViewProjection,
-  } = options;
-
-  clear(context, canvasSize);
-  stage.zsort()
-  .forEach((obj) => 
-  obj.zsort()
-  .forEach((face) => {
-    // ベクトルのなす角(カメラから面の中心に向かうベクトル, 面の法線ベクトル)を出す。
-    // 結果は cosθ の値がえられる。(-1 ~ 1)
-    // 0 ~ 1の範囲が 90°未満であるため、その場合にのみ表示してよい。
-    const angle = Matrix.vectorAngle(
-      // 面の法線ベクトル
-      face.getNormalVector().normalize(), 
-      // カメラから面の中心に向かうベクトル
-      face.getCenter().toVector());
-    if (angle < 0) {
-      renderFace(face);
-    }
-    renderNormalVector(face);
-  }));
+  return false;
 }
 
-function clear(context: CanvasRenderingContext2D, canvasSize: CanvasSize) {
+// カメラの見える範囲の座標にある場合のみ表示する
+export const visibleCulling: Culling = (face: Face) => {
+  return face.getCenter().z > 0;
+}
+
+// カリングを無効にするやつ
+export const disabledCulling: Culling = () => {
+  return true;
+}
+
+export function render(stage: Stage, options: RenderContext) {
+  clear(options);
+  renderStage(stage, options);
+}
+
+export function renderStage(stage: Stage, options: RenderContext) {
+  stage.zsort()
+    .forEach(model => renderModel(model, options));
+}
+
+export function renderModel(model: Model, options: RenderContext) {
+  model.zsort()
+    .forEach(face => renderFace(face, options));
+}
+
+export function renderFace(face: Face, options: RenderContext) {
+  const { 
+    light = new Vector(1, -1, 1),
+    projectionMethod: project = perspectiveViewProjection, 
+    cullingMethod: culling = normalCulling,
+  } = options;
+  if (!culling(face)) {
+    return;
+  }
+  const color = face.color.get(1 - ((Matrix.vectorAngle(face.getNormalVector(), light) + 1) / 2));
+  const v1 = project(face.vertex1), 
+        v2 = project(face.vertex2), 
+        v3 = project(face.vertex3);
+  draw(v1, v2, v3, color, options);
+}
+
+// for debugging.
+function renderNormalVector(face: Face, options: RenderContext) {
+  const center = face.getCenter();
+  const normalVec = face.getNormalVector().normalize(20);
+  const point = new Vertex3D(center.x + normalVec.x, center.y + normalVec.y, center.z + normalVec.z);
+  const f = new Face(center, point, center, face.color);
+  renderFace(f, options);
+}
+
+
+// low level api.
+function clear(options: RenderContext) {
+  const { context, canvasSize } = options;
   const { width, height } = canvasSize;
   context.clearRect(0, 0, width, height);
 }
 
-function draw(context: CanvasRenderingContext2D, v1: Vertex2D, v2: Vertex2D, v3: Vertex2D, color: string, canvasSize: CanvasSize) {
-  const dx = canvasSize.width / 2;
-  const dy = canvasSize.height / 2;
-  context.beginPath();
-  context.moveTo(v1.x + dx, -v1.y + dy);
-  context.lineTo(v2.x + dx, -v2.y + dy);
-  context.lineTo(v3.x + dx, -v3.y + dy);
-  context.closePath();
-  context.strokeStyle = color;
-  context.stroke();
-  context.fillStyle = color;
-  context.fill();
+function draw(v1: Vertex2D, v2: Vertex2D, v3: Vertex2D, color: string, options: RenderContext) {
+  const { context: c, canvasSize: s } = options;
+  const dx = s.width / 2;
+  const dy = s.height / 2;
+  c.beginPath();
+  c.moveTo(v1.x + dx, -v1.y + dy);
+  c.lineTo(v2.x + dx, -v2.y + dy);
+  c.lineTo(v3.x + dx, -v3.y + dy);
+  c.closePath();
+  c.strokeStyle = color;
+  c.stroke();
+  c.fillStyle = color;
+  c.fill();
 }

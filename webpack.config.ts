@@ -7,7 +7,7 @@ const config: webpack.Configuration = {
     filename: "index.js"
   },
   resolve: {
-    extensions: [ ".ts" ]
+    extensions: [ ".ts", ".json" ]
   },
   module: {
     rules: [
