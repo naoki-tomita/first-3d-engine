@@ -5,10 +5,10 @@ import { Model } from "./Model";
 import { Vector } from "./Vector";
 import { Color } from "./Color";
 import { Stage } from "./Stage";
+import { Face } from "./Face";
 
 export { Model } from "./Model";
-export { Face } from "./Face";
-export { Vertex2D, Vertex3D, Vector, Matrix, Color, Stage };
+export { Vertex2D, Vertex3D, Vector, Matrix, Color, Stage, Face };
 
 export type Project = (vertex3d: Vertex3D) => Vertex2D;
 
@@ -50,15 +50,31 @@ export function render(options: {
   .forEach((obj) => 
   obj.zsort()
   .forEach((face) => {
-    const color = face.color.get(1 - ((Matrix.vectorAngle(face.getNormalVector(), light) + 1) / 2));
-    const v1 = project(face.vertex1), 
-          v2 = project(face.vertex2), 
-          v3 = project(face.vertex3);
-    // if (face.getNormalVector().z > 0) {
-    //   return;
+    // if (face.color === Color.yellow) {
+      // ベクトルのなす角(カメラから面の中心に向かうベクトル, 面の法線ベクトル)を出す。
+      // 結果は cosθ の値がえられる。(-1 ~ 1)
+      // 0 ~ 1の範囲が 90°未満であるため、その場合にのみ表示してよい。
+      const angle = Matrix.vectorAngle(face.getNormalVector().normalize(), face.getCenter().toVector().normalize());
+      // if (angle > 0) {
+        renderFace(context, canvasSize, face, light, project);
+      // }
+      const center = face.getCenter();
+      const normalVec = face.getNormalVector().normalize(50);
+      const point = new Vertex3D(center.x + normalVec.x, center.y + normalVec.y, center.z + normalVec.z);
+      const f = new Face(center, point, center, Color.purple);
+      renderFace(context, canvasSize, f, light, project);
+    // } else {
+    //   renderFace(context, canvasSize, face, light, project);
     // }
-    draw(context, v1, v2, v3, color, canvasSize);
   }));
+}
+
+function renderFace(context: CanvasRenderingContext2D, canvasSize: CanvasSize, face: Face, light: Vector, project: Project) {
+  const color = face.color.get(1 - ((Matrix.vectorAngle(face.getNormalVector(), light) + 1) / 2));
+  const v1 = project(face.vertex1), 
+        v2 = project(face.vertex2), 
+        v3 = project(face.vertex3);
+  draw(context, v1, v2, v3, color, canvasSize);
 }
 
 function clear(context: CanvasRenderingContext2D, canvasSize: CanvasSize) {

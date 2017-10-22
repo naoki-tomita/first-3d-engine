@@ -21,6 +21,8 @@ export class Face {
     return new Vertex3D(x, y, z);
   }
   getNormalVector(): Vector {
-    return Matrix.crossProduct(new Vector(this.vertex1, this.vertex2), new Vector(this.vertex2, this.vertex3));
+    return Matrix.crossProduct(
+      new Vector(this.vertex1.toVector(), this.vertex2.toVector()), 
+      new Vector(this.vertex2.toVector(), this.vertex3.toVector()));
   }
 }

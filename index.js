@@ -70,22 +70,22 @@
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var Vertex3D_1 = __webpack_require__(1);
+var Vertex3D_1 = __webpack_require__(2);
 exports.Vertex3D = Vertex3D_1.Vertex3D;
-var Vertex2D_1 = __webpack_require__(5);
+var Vertex2D_1 = __webpack_require__(6);
 exports.Vertex2D = Vertex2D_1.Vertex2D;
-var Matrix_1 = __webpack_require__(2);
+var Matrix_1 = __webpack_require__(3);
 exports.Matrix = Matrix_1.Matrix;
-var Vector_1 = __webpack_require__(3);
+var Vector_1 = __webpack_require__(1);
 exports.Vector = Vector_1.Vector;
 var Color_1 = __webpack_require__(7);
 exports.Color = Color_1.Color;
 var Stage_1 = __webpack_require__(8);
 exports.Stage = Stage_1.Stage;
-var Model_1 = __webpack_require__(9);
-exports.Model = Model_1.Model;
-var Face_1 = __webpack_require__(10);
+var Face_1 = __webpack_require__(9);
 exports.Face = Face_1.Face;
+var Model_1 = __webpack_require__(10);
+exports.Model = Model_1.Model;
 exports.orthographicViewProjection = function (vertex3d) {
     // カメラと像を投影するスクリーンの距離
     var d = 100;
@@ -104,16 +104,31 @@ function render(options) {
         .forEach(function (obj) {
         return obj.zsort()
             .forEach(function (face) {
-            var color = face.color.get(1 - ((Matrix_1.Matrix.vectorAngle(face.getNormalVector(), light) + 1) / 2));
-            var v1 = project(face.vertex1), v2 = project(face.vertex2), v3 = project(face.vertex3);
-            // if (face.getNormalVector().z > 0) {
-            //   return;
+            // if (face.color === Color.yellow) {
+            // ベクトルのなす角(カメラから面の中心に向かうベクトル, 面の法線ベクトル)を出す。
+            // 結果は cosθ の値がえられる。(-1 ~ 1)
+            // 0 ~ 1の範囲が 90°未満であるため、その場合にのみ表示してよい。
+            var angle = Matrix_1.Matrix.vectorAngle(face.getNormalVector().normalize(), face.getCenter().toVector().normalize());
+            // if (angle > 0) {
+            renderFace(context, canvasSize, face, light, project);
             // }
-            draw(context, v1, v2, v3, color, canvasSize);
+            var center = face.getCenter();
+            var normalVec = face.getNormalVector().normalize(50);
+            var point = new Vertex3D_1.Vertex3D(center.x + normalVec.x, center.y + normalVec.y, center.z + normalVec.z);
+            var f = new Face_1.Face(center, point, center, Color_1.Color.purple);
+            renderFace(context, canvasSize, f, light, project);
+            // } else {
+            //   renderFace(context, canvasSize, face, light, project);
+            // }
         });
     });
 }
 exports.render = render;
+function renderFace(context, canvasSize, face, light, project) {
+    var color = face.color.get(1 - ((Matrix_1.Matrix.vectorAngle(face.getNormalVector(), light) + 1) / 2));
+    var v1 = project(face.vertex1), v2 = project(face.vertex2), v3 = project(face.vertex3);
+    draw(context, v1, v2, v3, color, canvasSize);
+}
 function clear(context, canvasSize) {
     var width = canvasSize.width, height = canvasSize.height;
     context.clearRect(0, 0, width, height);
@@ -140,59 +155,9 @@ function draw(context, v1, v2, v3, color, canvasSize) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var Vertex3D = /** @class */ (function () {
-    function Vertex3D(x, y, z) {
-        this.x = x;
-        this.y = y;
-        this.z = z;
-    }
-    return Vertex3D;
-}());
-exports.Vertex3D = Vertex3D;
-
-
-/***/ }),
-/* 2 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-var Vertex3D_1 = __webpack_require__(1);
-var Matrix = /** @class */ (function () {
-    function Matrix() {
-    }
-    // 内積をとる
-    Matrix.dotProduct = function (v1, v2) {
-        return v1.x * v2.x + v1.y * v2.y + v1.x * v2.y;
-    };
-    // 外積をとる
-    Matrix.crossProduct = function (v1, v2) {
-        return new Vertex3D_1.Vertex3D(v1.y * v2.z - v1.z * v2.y, v1.x * v2.z - v1.z * v2.x, v1.x * v2.y - v1.y * v2.x);
-    };
-    // ベクトルのノルム(長さ)を計算する
-    Matrix.norm = function (v) {
-        return Math.sqrt(Math.pow(v.x, 2) + Math.pow(v.y, 2) + Math.pow(v.z, 2));
-    };
-    // ベクトルのなす角というやつ
-    // この計算自体は cos theta を出すための計算なのだけど、関数名が思いつかなかった。
-    // thetaは計算不要のはず。
-    Matrix.vectorAngle = function (v1, v2) {
-        return this.dotProduct(v1, v2) / (this.norm(v1) * this.norm(v2));
-    };
-    return Matrix;
-}());
-exports.Matrix = Matrix;
-
-
-/***/ }),
-/* 3 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-var isNumber_1 = __webpack_require__(6);
+var Matrix_1 = __webpack_require__(3);
+var Vertex3D_1 = __webpack_require__(2);
+var isNumber_1 = __webpack_require__(5);
 var Vector = /** @class */ (function () {
     function Vector(x, y, z) {
         if (isNumber_1.isNumber(x) && isNumber_1.isNumber(y) && isNumber_1.isNumber(z)) {
@@ -209,9 +174,73 @@ var Vector = /** @class */ (function () {
     Vector.isVector = function (arg) {
         return isNumber_1.isNumber(arg.x) && isNumber_1.isNumber(arg.y) && isNumber_1.isNumber(arg.z);
     };
+    Vector.prototype.normalize = function (length) {
+        if (length === void 0) { length = 1; }
+        var norm = Matrix_1.Matrix.norm(this) / length;
+        return new Vector(this.x / norm, this.y / norm, this.z / norm);
+    };
+    Vector.prototype.toVertex3D = function () {
+        return new Vertex3D_1.Vertex3D(this.x, this.y, this.z);
+    };
     return Vector;
 }());
 exports.Vector = Vector;
+
+
+/***/ }),
+/* 2 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var Vector_1 = __webpack_require__(1);
+var Vertex3D = /** @class */ (function () {
+    function Vertex3D(x, y, z) {
+        this.x = x;
+        this.y = y;
+        this.z = z;
+    }
+    Vertex3D.prototype.toVector = function () {
+        return new Vector_1.Vector(this.x, this.y, this.z);
+    };
+    return Vertex3D;
+}());
+exports.Vertex3D = Vertex3D;
+
+
+/***/ }),
+/* 3 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var Vector_1 = __webpack_require__(1);
+var Matrix = /** @class */ (function () {
+    function Matrix() {
+    }
+    // 内積をとる
+    Matrix.dotProduct = function (v1, v2) {
+        return v1.x * v2.x + v1.y * v2.y + v1.x * v2.y;
+    };
+    // 外積をとる
+    Matrix.crossProduct = function (v1, v2) {
+        return new Vector_1.Vector(v1.y * v2.z - v1.z * v2.y, v1.z * v2.x - v1.x * v2.z, v1.x * v2.y - v1.y * v2.x);
+    };
+    // ベクトルのノルム(長さ)を計算する
+    Matrix.norm = function (v) {
+        return Math.sqrt(Math.pow(v.x, 2) + Math.pow(v.y, 2) + Math.pow(v.z, 2));
+    };
+    // ベクトルのなす角というやつ
+    // この計算自体は cos theta を出すための計算なのだけど、関数名が思いつかなかった。
+    // thetaは計算不要のはず。
+    Matrix.vectorAngle = function (v1, v2) {
+        return this.dotProduct(v1, v2) / (this.norm(v1) * this.norm(v2));
+    };
+    return Matrix;
+}());
+exports.Matrix = Matrix;
 
 
 /***/ }),
@@ -236,11 +265,10 @@ function isDisplay(face) {
     }
     return false;
 }
-var cube = new Models_1.Cube(new Engine_1.Vertex3D(30, 80, 100), 60, 60, 60, Engine_1.Color.red);
-var plane = new Models_1.Plane(new Engine_1.Vertex3D(100, -100, 120), 100, 100, Engine_1.Color.blue);
+var cube = new Models_1.Cube(new Engine_1.Vertex3D(0, 0, 100), 60, 60, 60, Engine_1.Color.red);
+// const plane = new Plane(new Vertex3D(100, -100, 120), 100, 100, Color.blue);
 var objects = [
     cube,
-    plane,
 ];
 var stage = new Engine_1.Stage(objects);
 function autorotate() {
@@ -256,7 +284,7 @@ function autorotate() {
     });
     setTimeout(autorotate, 10);
 }
-autorotate();
+// autorotate();
 var currentKey = 0;
 document.addEventListener("keydown", function (e) {
     currentKey = e.keyCode;
@@ -265,20 +293,32 @@ function keymove() {
     var dx = 0, dy = 0, dz = 0;
     switch (currentKey) {
         case 37:
-            dx -= 10;
+            dx -= 1;
             break;
         case 38:
-            dy += 10;
+            dy += 1;
             break;
         case 39:
-            dx += 10;
+            dx += 1;
             break;
         case 40:
-            dy -= 10;
+            dy -= 1;
             break;
+        default:
+            setTimeout(keymove, 1000 / 30);
+            return;
     }
     currentKey = 0;
-    objects[1].move(dx, dy, dz);
+    objects[0].rotate((Math.PI / 90) * dx, (Math.PI / 90) * dy);
+    Engine_1.render({
+        stage: stage,
+        context: c,
+        canvasSize: {
+            width: 500,
+            height: 500,
+        },
+        projectMethod: Engine_1.orthographicViewProjection,
+    });
     setTimeout(keymove, 1000 / 30);
 }
 keymove();
@@ -286,6 +326,19 @@ keymove();
 
 /***/ }),
 /* 5 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+function isNumber(arg) {
+    return typeof arg === "number";
+}
+exports.isNumber = isNumber;
+
+
+/***/ }),
+/* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -299,19 +352,6 @@ var Vertex2D = /** @class */ (function () {
     return Vertex2D;
 }());
 exports.Vertex2D = Vertex2D;
-
-
-/***/ }),
-/* 6 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-function isNumber(arg) {
-    return typeof arg === "number";
-}
-exports.isNumber = isNumber;
 
 
 /***/ }),
@@ -375,6 +415,37 @@ exports.Stage = Stage;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
+var Vertex3D_1 = __webpack_require__(2);
+var Vector_1 = __webpack_require__(1);
+var Matrix_1 = __webpack_require__(3);
+var Face = /** @class */ (function () {
+    function Face(v1, v2, v3, c) {
+        this.vertex1 = v1;
+        this.vertex2 = v2;
+        this.vertex3 = v3;
+        this.color = c;
+    }
+    Face.prototype.getCenter = function () {
+        var x = (this.vertex1.x + this.vertex2.x + this.vertex3.x) / 3;
+        var y = (this.vertex1.y + this.vertex2.y + this.vertex3.y) / 3;
+        var z = (this.vertex1.z + this.vertex2.z + this.vertex3.z) / 3;
+        return new Vertex3D_1.Vertex3D(x, y, z);
+    };
+    Face.prototype.getNormalVector = function () {
+        return Matrix_1.Matrix.crossProduct(new Vector_1.Vector(this.vertex1.toVector(), this.vertex2.toVector()), new Vector_1.Vector(this.vertex2.toVector(), this.vertex3.toVector()));
+    };
+    return Face;
+}());
+exports.Face = Face;
+
+
+/***/ }),
+/* 10 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
 var Engine_1 = __webpack_require__(0);
 var Model = /** @class */ (function () {
     function Model(vertices, faces) {
@@ -414,37 +485,6 @@ var Model = /** @class */ (function () {
     return Model;
 }());
 exports.Model = Model;
-
-
-/***/ }),
-/* 10 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-var Vertex3D_1 = __webpack_require__(1);
-var Vector_1 = __webpack_require__(3);
-var Matrix_1 = __webpack_require__(2);
-var Face = /** @class */ (function () {
-    function Face(v1, v2, v3, c) {
-        this.vertex1 = v1;
-        this.vertex2 = v2;
-        this.vertex3 = v3;
-        this.color = c;
-    }
-    Face.prototype.getCenter = function () {
-        var x = (this.vertex1.x + this.vertex2.x + this.vertex3.x) / 3;
-        var y = (this.vertex1.y + this.vertex2.y + this.vertex3.y) / 3;
-        var z = (this.vertex1.z + this.vertex2.z + this.vertex3.z) / 3;
-        return new Vertex3D_1.Vertex3D(x, y, z);
-    };
-    Face.prototype.getNormalVector = function () {
-        return Matrix_1.Matrix.crossProduct(new Vector_1.Vector(this.vertex1, this.vertex2), new Vector_1.Vector(this.vertex2, this.vertex3));
-    };
-    return Face;
-}());
-exports.Face = Face;
 
 
 /***/ }),
@@ -497,18 +537,18 @@ var Cube = /** @class */ (function (_super) {
         var f = [
             // 頂点の順序はとても大切。
             // 頂点の順序によって面の生成方向を決める。v1 -> v2 のベクトルと v2 -> v3 のベクトルの外積を法線ベクトルとする。
-            new Engine_2.Face(v[0], v[1], v[2], color),
-            new Engine_2.Face(v[1], v[3], v[2], color),
-            new Engine_2.Face(v[2], v[3], v[6], color),
-            new Engine_2.Face(v[6], v[3], v[7], color),
-            new Engine_2.Face(v[1], v[5], v[3], color),
-            new Engine_2.Face(v[5], v[7], v[3], color),
-            new Engine_2.Face(v[4], v[6], v[5], color),
-            new Engine_2.Face(v[5], v[6], v[7], color),
-            new Engine_2.Face(v[0], v[2], v[6], color),
-            new Engine_2.Face(v[0], v[6], v[4], color),
-            new Engine_2.Face(v[0], v[4], v[1], color),
-            new Engine_2.Face(v[1], v[4], v[5], color),
+            new Engine_2.Face(v[0], v[1], v[2], Engine_2.Color.red),
+            new Engine_2.Face(v[1], v[3], v[2], Engine_2.Color.red),
+            new Engine_2.Face(v[2], v[3], v[6], Engine_2.Color.green),
+            new Engine_2.Face(v[6], v[3], v[7], Engine_2.Color.green),
+            new Engine_2.Face(v[1], v[5], v[3], Engine_2.Color.blue),
+            new Engine_2.Face(v[5], v[7], v[3], Engine_2.Color.blue),
+            new Engine_2.Face(v[4], v[6], v[5], Engine_2.Color.purple),
+            new Engine_2.Face(v[5], v[6], v[7], Engine_2.Color.purple),
+            new Engine_2.Face(v[0], v[2], v[6], Engine_2.Color.yellow),
+            new Engine_2.Face(v[0], v[6], v[4], Engine_2.Color.yellow),
+            new Engine_2.Face(v[0], v[4], v[1], Engine_2.Color.pink),
+            new Engine_2.Face(v[1], v[4], v[5], Engine_2.Color.pink),
         ];
         _this = _super.call(this, v, f) || this;
         return _this;

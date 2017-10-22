@@ -1,3 +1,5 @@
+import { Vector } from "./Vector";
+
 export class Vertex3D {
   x: number;
   y: number;
@@ -6,5 +8,8 @@ export class Vertex3D {
     this.x = x;
     this.y = y;
     this.z = z;
+  }
+  toVector() {
+    return new Vector(this.x, this.y, this.z);
   }
 }
