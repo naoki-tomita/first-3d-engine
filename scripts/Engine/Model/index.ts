@@ -18,8 +18,7 @@ export class Model {
     const count = this.vertices.length;
     return new Vertex3D(sumX / count, sumY / count, sumZ / count);
   }
-  rotate(theta: number, phi: number) {
-    const center = this.getCenter();
+  rotate(theta: number, phi: number, center: Vertex3D = this.getCenter()) {
     const ct = Math.cos(theta), st = Math.sin(theta), cp = Math.cos(phi), sp = Math.sin(phi);
 
     this.vertices.forEach((v) => {

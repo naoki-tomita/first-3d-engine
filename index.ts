@@ -39,17 +39,6 @@ const stage = new Stage(objects);
 
 function autorotate() {
   objects[0].rotate(Math.PI / 360, Math.PI / 720);
-  render(stage, {
-    context: c,
-    canvasSize: { 
-      width: 500, 
-      height: 500, 
-    },
-    projectionMethod: project,
-    cullingMethod: function(face: Face) {
-      return normalCulling(face) && visibleCulling(face);
-    }
-  });
   setTimeout(autorotate, 10);
 }
 
@@ -80,8 +69,24 @@ function keymove() {
       return;
   }
   currentKey = 0;
-  objects[0].move(dx, dy, dz);
+  stage.rotate(Math.PI / 90 * dx, Math.PI / 90 * dz);
   setTimeout(keymove, 1000 / 30);
 }
-
 keymove();
+
+function rendering() {
+  render(stage, {
+    context: c,
+    canvasSize: { 
+      width: 500, 
+      height: 500, 
+    },
+    projectionMethod: project,
+    cullingMethod: function(face: Face) {
+      return normalCulling(face) && visibleCulling(face);
+    }
+  });
+  setTimeout(rendering, 1000 / 30);
+}
+
+rendering();

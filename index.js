@@ -356,8 +356,8 @@ var Model = /** @class */ (function () {
         var count = this.vertices.length;
         return new Engine_1.Vertex3D(sumX / count, sumY / count, sumZ / count);
     };
-    Model.prototype.rotate = function (theta, phi) {
-        var center = this.getCenter();
+    Model.prototype.rotate = function (theta, phi, center) {
+        if (center === void 0) { center = this.getCenter(); }
         var ct = Math.cos(theta), st = Math.sin(theta), cp = Math.cos(phi), sp = Math.sin(phi);
         this.vertices.forEach(function (v) {
             var x = v.x - center.x, y = v.y - center.y, z = v.z - center.z;
@@ -414,17 +414,6 @@ var objects = [
 var stage = new Engine_1.Stage(objects);
 function autorotate() {
     objects[0].rotate(Math.PI / 360, Math.PI / 720);
-    Engine_1.render(stage, {
-        context: c,
-        canvasSize: {
-            width: 500,
-            height: 500,
-        },
-        projectionMethod: Engine_1.orthographicViewProjection,
-        cullingMethod: function (face) {
-            return Engine_1.normalCulling(face) && Engine_1.visibleCulling(face);
-        }
-    });
     setTimeout(autorotate, 10);
 }
 autorotate();
@@ -452,10 +441,25 @@ function keymove() {
             return;
     }
     currentKey = 0;
-    objects[0].move(dx, dy, dz);
+    stage.rotate(Math.PI / 90 * dx, Math.PI / 90 * dz);
     setTimeout(keymove, 1000 / 30);
 }
 keymove();
+function rendering() {
+    Engine_1.render(stage, {
+        context: c,
+        canvasSize: {
+            width: 500,
+            height: 500,
+        },
+        projectionMethod: Engine_1.orthographicViewProjection,
+        cullingMethod: function (face) {
+            return Engine_1.normalCulling(face) && Engine_1.visibleCulling(face);
+        }
+    });
+    setTimeout(rendering, 1000 / 30);
+}
+rendering();
 
 
 /***/ }),
@@ -495,6 +499,7 @@ exports.Vertex2D = Vertex2D;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
+var Vertex3D_1 = __webpack_require__(1);
 var Stage = /** @class */ (function () {
     function Stage(objects) {
         if (objects === void 0) { objects = []; }
@@ -502,6 +507,12 @@ var Stage = /** @class */ (function () {
     }
     Stage.prototype.appear = function (objects) {
         this.objects = this.objects.concat(objects);
+    };
+    Stage.prototype.move = function (dx, dy, dz) {
+        this.objects.forEach(function (o) { return o.move(dx, dy, dz); });
+    };
+    Stage.prototype.rotate = function (theta, phi) {
+        this.objects.forEach(function (o) { return o.rotate(theta, phi, new Vertex3D_1.Vertex3D(0, 0, 0)); });
     };
     Stage.prototype.zsort = function () {
         return this.objects.slice().sort(function (a, b) { return b.getCenter().z - a.getCenter().z; });
