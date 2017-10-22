@@ -98,37 +98,40 @@ exports.perspectiveViewProjection = function (vertex3d) {
 };
 // dx, dy は 画面の中心を設定する。そこを中心に画像が生成される
 function render(options) {
+    function renderFace(face) {
+        var color = face.color.get(1 - ((Matrix_1.Matrix.vectorAngle(face.getNormalVector(), light) + 1) / 2));
+        var v1 = project(face.vertex1), v2 = project(face.vertex2), v3 = project(face.vertex3);
+        draw(context, v1, v2, v3, color, canvasSize);
+    }
+    function renderNormalVector(face) {
+        var center = face.getCenter();
+        var normalVec = face.getNormalVector().normalize(20);
+        var point = new Vertex3D_1.Vertex3D(center.x + normalVec.x, center.y + normalVec.y, center.z + normalVec.z);
+        var f = new Face_1.Face(center, point, center, face.color);
+        renderFace(f);
+    }
     var stage = options.stage, context = options.context, canvasSize = options.canvasSize, _a = options.light, light = _a === void 0 ? new Vector_1.Vector(1, -1, 1) : _a, _b = options.projectMethod, project = _b === void 0 ? exports.perspectiveViewProjection : _b;
     clear(context, canvasSize);
     stage.zsort()
         .forEach(function (obj) {
         return obj.zsort()
             .forEach(function (face) {
-            // if (face.color === Color.yellow) {
             // ベクトルのなす角(カメラから面の中心に向かうベクトル, 面の法線ベクトル)を出す。
             // 結果は cosθ の値がえられる。(-1 ~ 1)
             // 0 ~ 1の範囲が 90°未満であるため、その場合にのみ表示してよい。
-            var angle = Matrix_1.Matrix.vectorAngle(face.getNormalVector().normalize(), face.getCenter().toVector().normalize());
-            // if (angle > 0) {
-            renderFace(context, canvasSize, face, light, project);
-            // }
-            var center = face.getCenter();
-            var normalVec = face.getNormalVector().normalize(50);
-            var point = new Vertex3D_1.Vertex3D(center.x + normalVec.x, center.y + normalVec.y, center.z + normalVec.z);
-            var f = new Face_1.Face(center, point, center, Color_1.Color.purple);
-            renderFace(context, canvasSize, f, light, project);
-            // } else {
-            //   renderFace(context, canvasSize, face, light, project);
-            // }
+            var angle = Matrix_1.Matrix.vectorAngle(
+            // 面の法線ベクトル
+            face.getNormalVector().normalize(), 
+            // カメラから面の中心に向かうベクトル
+            face.getCenter().toVector());
+            if (angle < 0) {
+                renderFace(face);
+            }
+            renderNormalVector(face);
         });
     });
 }
 exports.render = render;
-function renderFace(context, canvasSize, face, light, project) {
-    var color = face.color.get(1 - ((Matrix_1.Matrix.vectorAngle(face.getNormalVector(), light) + 1) / 2));
-    var v1 = project(face.vertex1), v2 = project(face.vertex2), v3 = project(face.vertex3);
-    draw(context, v1, v2, v3, color, canvasSize);
-}
 function clear(context, canvasSize) {
     var width = canvasSize.width, height = canvasSize.height;
     context.clearRect(0, 0, width, height);
@@ -222,7 +225,7 @@ var Matrix = /** @class */ (function () {
     }
     // 内積をとる
     Matrix.dotProduct = function (v1, v2) {
-        return v1.x * v2.x + v1.y * v2.y + v1.x * v2.y;
+        return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
     };
     // 外積をとる
     Matrix.crossProduct = function (v1, v2) {
