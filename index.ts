@@ -37,6 +37,7 @@ function isDisplay(face: Face) {
 
 const cube = new Cube(new Vertex3D(0, 0, 100), 60, 60, 60, Color.red);
 const cupModel = convert(cup);
+cupModel.move(0, 0, 2);
 
 const objects = [ 
   // cube,

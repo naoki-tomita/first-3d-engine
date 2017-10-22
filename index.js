@@ -406,6 +406,7 @@ function isDisplay(face) {
 }
 var cube = new Models_1.Cube(new Engine_1.Vertex3D(0, 0, 100), 60, 60, 60, Engine_1.Color.red);
 var cupModel = Engine_1.convert(cup);
+cupModel.move(0, 0, 2);
 var objects = [
     // cube,
     cupModel,
