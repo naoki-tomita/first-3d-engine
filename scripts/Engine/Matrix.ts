@@ -4,7 +4,7 @@ import { Vertex3D } from "./Vertex3D";
 export class Matrix {
   // 内積をとる
   static dotProduct(v1: Vector, v2: Vector): number {
-    return v1.x * v2.x + v1.y * v2.y + v1.x * v2.y;
+    return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
   }
 
   // 外積をとる
