@@ -1,4 +1,4 @@
-import { 
+import {
   Color, Face, Matrix,
   Model, Vertex3D, Vertex2D,
   Vector, Stage, render,
@@ -31,7 +31,7 @@ const cube = new Cube(new Vertex3D(0, 0, 100), 60, 60, 60, Color.red);
 const cup = convert(cupJson);
 cup.move(0, 0, 2);
 
-const objects = [ 
+const objects = [
   // cube,
   cup,
 ];
@@ -69,7 +69,7 @@ function keymove() {
       return;
   }
   currentKey = 0;
-  stage.rotate(Math.PI / 90 * dx, Math.PI / 90 * dz);
+  stage.move(dx, 0, dz);
   setTimeout(keymove, 1000 / 30);
 }
 keymove();
@@ -77,12 +77,12 @@ keymove();
 function rendering() {
   render(stage, {
     context: c,
-    canvasSize: { 
-      width: 500, 
-      height: 500, 
+    canvasSize: {
+      width: 500,
+      height: 500,
     },
     projectionMethod: project,
-    cullingMethod: function(face: Face) {
+    cullingMethod(face: Face) {
       return normalCulling(face) && visibleCulling(face);
     }
   });

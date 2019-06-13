@@ -15,7 +15,7 @@ export type Project = (vertex3d: Vertex3D) => Vertex2D;
 export type Culling = (face: Face) => boolean;
 
 interface CanvasSize {
-  width: number; 
+  width: number;
   height: number;
 }
 
@@ -27,12 +27,13 @@ interface RenderContext {
   cullingMethod?: Culling,
 }
 
-export const orthographicViewProjection: Project = (vertex3d: Vertex3D) => {
+// 画面の橋に行くほど歪むのはなぜ？
+export const orthographicViewProjection: Project = (o: Vertex3D) => {
   // カメラと像を投影するスクリーンの距離
   const d = 100;
-  const z = vertex3d.z || 1;
-  const r = d / z;
-  return new Vertex2D(r * vertex3d.x, r * vertex3d.y);
+  const y = (d / (o.z || 1)) * o.y;
+  const x = (d / (o.z || 1)) * o.x;
+  return new Vertex2D(x, y);
 }
 
 export const perspectiveViewProjection: Project = (vertex3d: Vertex3D) => {
@@ -46,7 +47,7 @@ export const normalCulling: Culling = (face: Face) => {
   // 0 ~ 1の範囲が 90°未満であるため、その場合にのみ表示してよい。
   const angle = Matrix.vectorAngle(
     // 面の法線ベクトル
-    face.getNormalVector().normalize(), 
+    face.getNormalVector().normalize(),
     // カメラから面の中心に向かうベクトル
     face.getCenter().toVector());
   if (angle < 0) {
@@ -81,17 +82,18 @@ export function renderModel(model: Model, options: RenderContext) {
 }
 
 export function renderFace(face: Face, options: RenderContext) {
-  const { 
+  const {
     light = new Vector(1, -1, 1),
-    projectionMethod: project = perspectiveViewProjection, 
+    projectionMethod: project = perspectiveViewProjection,
     cullingMethod: culling = normalCulling,
   } = options;
   if (!culling(face)) {
     return;
   }
+  // ここで面の明るさを決めている。太陽に向いている方向は明るく、そうでない方向は適当に暗くする。
   const color = face.color.get(1 - ((Matrix.vectorAngle(face.getNormalVector(), light) + 1) / 2));
-  const v1 = project(face.vertex1), 
-        v2 = project(face.vertex2), 
+  const v1 = project(face.vertex1),
+        v2 = project(face.vertex2),
         v3 = project(face.vertex3);
   draw(v1, v2, v3, color, options);
 }
@@ -99,9 +101,9 @@ export function renderFace(face: Face, options: RenderContext) {
 // for debugging.
 function renderNormalVector(face: Face, options: RenderContext) {
   const center = face.getCenter();
-  const normalVec = face.getNormalVector().normalize(20);
+  const normalVec = face.getNormalVector().normalize(1);
   const point = new Vertex3D(center.x + normalVec.x, center.y + normalVec.y, center.z + normalVec.z);
-  const f = new Face(center, point, center, face.color);
+  const f = new Face(center, point, center, Color.red);
   renderFace(f, options);
 }
 
