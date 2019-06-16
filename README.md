@@ -2,7 +2,7 @@
 TypeScriptを使った3Dモデルを表示するためのプログラムです
 
 # demo
-[demo](https://naoki-tomita.github.io/first-3d-engine/)
+[demo](https://naoki-tomita.github.io/first-3d-engine/dist/)
 
 * 矢印キーで前後左右に動かせます。
 
