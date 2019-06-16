@@ -28,7 +28,7 @@ interface RenderContext {
 }
 
 // 画面の橋に行くほど歪むのはなぜ？
-export const orthographicViewProjection: Project = (o: Vertex3D) => {
+export const perspectiveViewProjection: Project = (o: Vertex3D) => {
   // カメラと像を投影するスクリーンの距離
   const d = 300;
   const y = (d / (o.z || 1)) * o.y;
@@ -36,7 +36,7 @@ export const orthographicViewProjection: Project = (o: Vertex3D) => {
   return new Vertex2D(x, y);
 }
 
-export const perspectiveViewProjection: Project = (vertex3d: Vertex3D) => {
+export const orthographicViewProjection: Project = (vertex3d: Vertex3D) => {
   return new Vertex2D(vertex3d.x, vertex3d.y);
 }
 
@@ -84,7 +84,7 @@ export function renderModel(model: Model, options: RenderContext) {
 export function renderFace(face: Face, options: RenderContext) {
   const {
     light = new Vector(1, -1, 1),
-    projectionMethod: project = perspectiveViewProjection,
+    projectionMethod: project = orthographicViewProjection,
     cullingMethod: culling = normalCulling,
   } = options;
   if (!culling(face)) {

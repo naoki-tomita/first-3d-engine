@@ -1,5 +1,6 @@
 import { Model } from "./Model";
 import { Vertex3D } from "./Vertex3D";
+import { Camera } from "./Camera";
 
 export class Stage {
   objects: Model[];
@@ -9,6 +10,10 @@ export class Stage {
 
   appear(objects: Model[]) {
     this.objects = [ ...this.objects, ...objects ];
+  }
+
+  setCamera(camera: Camera) {
+
   }
 
   move(dx: number, dy: number, dz: number) {
