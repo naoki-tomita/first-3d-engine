@@ -35,6 +35,7 @@ const objects = [
   // cube,
   cup,
 ];
+cup.move(0, 0, 5);
 const stage = new Stage(objects);
 
 function autorotate() {

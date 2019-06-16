@@ -30,7 +30,7 @@ interface RenderContext {
 // 画面の橋に行くほど歪むのはなぜ？
 export const orthographicViewProjection: Project = (o: Vertex3D) => {
   // カメラと像を投影するスクリーンの距離
-  const d = 100;
+  const d = 300;
   const y = (d / (o.z || 1)) * o.y;
   const x = (d / (o.z || 1)) * o.x;
   return new Vertex2D(x, y);
