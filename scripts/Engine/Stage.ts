@@ -4,8 +4,10 @@ import { Camera } from "./Camera";
 
 export class Stage {
   objects: Model[];
-  constructor(objects: Model[] = []) {
+  camera: Camera;
+  constructor(objects: Model[] = [], camera: Camera) {
     this.objects = objects;
+    this.camera = camera;
   }
 
   appear(objects: Model[]) {
@@ -13,7 +15,7 @@ export class Stage {
   }
 
   setCamera(camera: Camera) {
-
+    this.camera = camera;
   }
 
   move(dx: number, dy: number, dz: number) {
