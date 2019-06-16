@@ -1,7 +1,7 @@
 # first-3d-engine
 TypeScriptを使った3Dモデルを表示するためのプログラムです
 
-![](https://naoki-tomita.github.io/image.png)
+![](./image.png)
 
 # demo
 [demo](https://naoki-tomita.github.io/first-3d-engine/dist/)
