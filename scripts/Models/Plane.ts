@@ -13,6 +13,10 @@ export class Plane extends Model {
     const f = [
       // 頂点の順序はとても大切。
       // 頂点の順序によって面の生成方向を決める。v1 -> v2 のベクトルと v2 -> v3 のベクトルの外積を法線ベクトルとする。
+      // 面が上を向いているとき
+      new Face(v[2], v[1], v[0], color),
+      new Face(v[2], v[3], v[1], color),
+      // 面が下を向いているとき
       new Face(v[0], v[1], v[2], color),
       new Face(v[1], v[3], v[2], color),
     ];

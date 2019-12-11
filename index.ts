@@ -1,22 +1,26 @@
 import {
   Vertex3D, Stage, render,
-  convert,
   Vector,
+  Color,
+  convert,
 } from "./scripts/Engine";
 import { PerspectiveCamera } from "./scripts/Engine/Camera";
+import { Plane, Cube } from "./scripts/Models";
 
 const cupJson = require("./scripts/Models/Cup.json");
+const cup = convert(cupJson);
+cup.move(0, 0, 2);
+cup.move(0, 0, 5);
 
 const c = (document.getElementById("canvas") as HTMLCanvasElement).getContext("2d");
 
-const cup = convert(cupJson);
-cup.move(0, 0, 2);
-
+// const cube = new Cube(new Vertex3D(0, 0, 100), 60, 60, 60, Color.red);
+const plane = new Plane(new Vertex3D(0, 10, 100), 60, 60, Color.red);
 const objects = [
+  // plane,
   // cube,
   cup,
 ];
-cup.move(0, 0, 5);
 const camera = new PerspectiveCamera(new Vertex3D(0, 0, 0), new Vector(0, 0, 1), 300);
 const stage = new Stage(objects, camera);
 
@@ -32,38 +36,59 @@ enum Keys {
   Down = "ArrowDown",
   Right = "ArrowRight",
   Left = "ArrowLeft",
+  W = "w",
+  A = "a",
+  S = "s",
+  D = "d",
+  NONE = "",
 }
 
-let currentKey = "";
+let currentKey = Keys.NONE;
 document.addEventListener("keydown", (e) => {
-  currentKey = e.key;
+  console.log(e.key);
+  currentKey = e.key as Keys;
 });
 
 function keymove() {
   let dx = 0, dz = 0;
+  let ddx = 0, ddy = 0;
   switch(currentKey) {
-    case "ArrowLeft":
-      dx -= 1;
-      break;
-    case "ArrowUp":
-      dz += 1;
-      break;
-    case "ArrowRight":
+    case Keys.Left:
       dx += 1;
       break;
-    case "ArrowDown":
+    case Keys.Up:
+      dz += 1;
+      break;
+    case Keys.Right:
+      dx -= 1;
+      break;
+    case Keys.Down:
       dz -= 1;
+      break;
+    case Keys.W:
+      ddy += 1;
+      break;
+    case Keys.S:
+      ddy -= 1;
+      break;
+    case Keys.A:
+      ddx += 1;
+      break;
+    case Keys.D:
+      ddx -= 1;
       break;
     default:
       setTimeout(keymove, 1000 / 30);
       return;
   }
-  currentKey = "";
-  camera.move(dx, 0, dz);
+  currentKey = Keys.NONE;
+  camera.position.move(dx, 0, dz);
+  camera.direction.move(ddx, ddy, 0);
   setTimeout(keymove, 1000 / 30);
 }
 keymove();
 
+const debug = (document.getElementById("debug") as HTMLCanvasElement).getContext("2d");
 function rendering() {
   render(stage, {
     context: c,
@@ -72,7 +97,21 @@ function rendering() {
       height: 500,
     }
   });
+  debugRender();
   setTimeout(rendering, 1000 / 30);
 }
-
 rendering();
+
+function debugRender() {
+  const points = [cup.getCenter(), camera.position, camera.direction].map(({ x, z }) => ({ x, z }));
+  debug.clearRect(0, 0, 500, 500);
+  const colors = [
+    "black",
+    "blue",
+    "red"
+  ];
+  points.forEach(({ x, z }, i) => {
+    debug.fillStyle = `${colors[i]}`;
+    debug.fillRect(250 - x, 250 - z, 4, 4);
+  })
+}
