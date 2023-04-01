@@ -23,7 +23,7 @@ async function main() {
     cube,
     cup,
   ];
-  const camera = new PerspectiveCamera(new Vertex3D(0, 0, 0), new Vertex3D(0, 0, 1), 300);
+  const camera = new PerspectiveCamera2(new Vertex3D(0, 0, 0), new Vertex3D(0, 0, 1), 300);
   const stage = new Stage(objects, camera);
 
   function autorotate() {
