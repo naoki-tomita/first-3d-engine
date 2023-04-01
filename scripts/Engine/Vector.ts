@@ -32,6 +32,27 @@ export class Vector {
     return new Vertex3D(this.x, this.y, this.z);
   }
 
+  rotate(phi: number, theta: number, psi: number): Vector {
+    const sinPhi = Math.sin(phi);
+    const cosPhi = Math.cos(phi);
+    const sinTheta = Math.sin(theta);
+    const cosTheta = Math.cos(theta);
+    const sinPsi = Math.sin(psi);
+    const cosPsi = Math.cos(psi);
+
+    // ロール、ピッチ、ヨーの順に回転させる
+    const rotatedX = this.x * (cosTheta * cosPsi) +
+                     this.y * (cosTheta * sinPsi) +
+                     this.z * (-sinTheta);
+    const rotatedY = this.x * (sinPhi * sinTheta * cosPsi - cosPhi * sinPsi) +
+                     this.y * (sinPhi * sinTheta * sinPsi + cosPhi * cosPsi) +
+                     this.z * (sinPhi * cosTheta);
+    const rotatedZ = this.x * (cosPhi * sinTheta * cosPsi + sinPhi * sinPsi) +
+                     this.y * (cosPhi * sinTheta * sinPsi - sinPhi * cosPsi) +
+                     this.z * (cosPhi * cosTheta);
+    return new Vector(rotatedX, rotatedY, rotatedZ);
+  }
+
   move(dx: number, dy: number, dz: number) {
     this.x += dx;
     this.y += dy;

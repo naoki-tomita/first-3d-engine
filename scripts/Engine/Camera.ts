@@ -4,11 +4,11 @@ import { Vector } from "./Vector";
 
 export abstract class Camera {
   position: Vertex3D;
-  direction: Vector;
+  lookAt: Vertex3D;
 
-  constructor(position: Vertex3D, direction: Vector) {
+  constructor(position: Vertex3D, lookAt: Vertex3D) {
     this.position = position;
-    this.direction = direction;
+    this.lookAt = lookAt;
   }
 
   abstract project(v: Vertex3D): Vertex2D;
@@ -33,31 +33,38 @@ export abstract class Camera {
 export class PerspectiveCamera extends Camera {
   distance: number;
 
-  constructor(position: Vertex3D, direction: Vector, distance: number) {
-    super(position, direction)
+  constructor(position: Vertex3D, lookAt: Vertex3D, distance: number) {
+    super(position, lookAt)
     this.distance = distance;
   }
 
-  project({ x, y, z } : Vertex3D): Vertex2D {
-    const ratio = (this.distance / ((z - this.position.z) || 1));
-    return new Vertex2D(ratio * (x - this.position.x), ratio * (y - this.position.y));
-  }
+  project(vertex : Vertex3D): Vertex2D {
+    const dx = this.lookAt.x - this.position.x;
+    const dy = this.lookAt.y - this.position.y;
+    const dz = this.lookAt.z - this.position.z;
 
-  project_(vertex : Vertex3D): Vertex2D {
-    // 向きのベクトルを得る
-    const dx = this.direction.x - this.position.x;
-    const dy = this.direction.y - this.position.y;
-    const dz = this.direction.z - this.position.z;
-    // 向きベクトルから、カメラの回転角を計算する
-    const theta = Math.atan2(dx, dy);
-    const phi = Math.atan2(dz, dx);
-    const psi = Math.atan2(dy, dz);
-    // カメラの回転角から、点の座標を逆回転させる => カメラの座標系に変換する
-    const rotatedPoint = Matrix.rotate(vertex, this.position, phi, theta, psi);
+    const theta = Math.atan2(dx, dz);
+    const phi = Math.atan2(dy, Math.sqrt(dx ** 2 + dz ** 2));
+    const psi = 0;
+
+    const rotatedX = Math.cos(theta) * Math.cos(psi) + Math.sin(theta) * Math.sin(phi) * Math.sin(psi);
+    const rotatedY = Math.sin(phi) * Math.sin(psi);
+    const rotatedZ = Math.sin(theta) * Math.cos(psi) - Math.cos(theta) * Math.sin(phi) * Math.sin(psi);
+
+    const x = vertex.x - this.position.x;
+    const y = vertex.y - this.position.y;
+    const z = vertex.z - this.position.z;
+
+    const rotatedPoint = new Vertex3D(
+      rotatedX * x + rotatedY * y + rotatedZ * z + this.position.x,
+      rotatedY * x + Math.cos(phi) * y - Math.sin(phi) * z + this.position.y,
+      rotatedZ * x + Math.sin(phi) * y + Math.cos(phi) * z + this.position.z
+    );
 
     const ratio = (this.distance / ((rotatedPoint.z - this.position.z) || 1));
     return new Vertex2D(ratio * (rotatedPoint.x - this.position.x), ratio * (rotatedPoint.y - this.position.y));
   }
+
 
   culling(face: Face): boolean {
     return super.culling(face) && this.perspectiveCurring(face);

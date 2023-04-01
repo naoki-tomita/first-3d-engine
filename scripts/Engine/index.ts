@@ -39,7 +39,7 @@ export function renderModel(model: Model, camera: Camera, options: RenderContext
 }
 
 export function renderFace(face: Face, camera: Camera, options: RenderContext) {
-  const { light = new Vector(1, -1, 1) } = options;
+  const { light = new Vector(100, -100, 100) } = options;
   if (!camera.culling(face)) {
     return;
   }

@@ -1,3 +1,4 @@
+import { Matrix } from ".";
 import { Vector } from "./Vector";
 
 export class Vertex3D {
@@ -25,5 +26,9 @@ export class Vertex3D {
     this.x = x;
     this.y = y;
     this.z = z;
+  }
+
+  rotate(center: Vertex3D, theta: number, phi: number): Vertex3D {
+    return Matrix.rotate(this, center, theta, phi);
   }
 }
