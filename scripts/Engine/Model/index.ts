@@ -1,27 +1,24 @@
 import { Vertex3D, Face } from "../../Engine";
 
 export class Model {
+  vertices: Vertex3D[];
   faces: Face[];
 
-  constructor(faces: Face[]) {
+  constructor(vertices: Vertex3D[], faces: Face[]) {
+    this.vertices = vertices;
     this.faces = faces;
   }
 
   getCenter() {
     let sumX = 0, sumY = 0, sumZ = 0;
 
-    const vertices = this.faces.map(it => ([it.vertex1, it.vertex2, it.vertex3])).flat()
-    vertices.forEach((v) => {
+    this.vertices.forEach((v) => {
       sumX += v.x;
       sumY += v.y;
       sumZ += v.z;
     });
-    const count = vertices.length;
+    const count = this.vertices.length;
     return new Vertex3D(sumX / count, sumY / count, sumZ / count);
-  }
-
-  get vertices() {
-    return this.faces.map(it => ([it.vertex1, it.vertex2, it.vertex3])).flat();
   }
 
   rotate(theta: number, phi: number, center: Vertex3D = this.getCenter()) {
@@ -51,5 +48,6 @@ export class Model {
 
   mergeModel(model: Model) {
     this.faces = [...this.faces, ...model.faces];
+    this.vertices = [...this.vertices, ...model.vertices];
   }
 }

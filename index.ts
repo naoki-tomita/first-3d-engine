@@ -20,10 +20,10 @@ async function main() {
   const plane = new Plane(new Vertex3D(0, 10, 100), 60, 60, Color.red);
   const objects = [
     // plane,
-    cube,
+    // cube,
     cup,
   ];
-  const camera = new PerspectiveCamera2(new Vertex3D(0, 0, 0), new Vertex3D(0, 0, 1), 300);
+  const camera = new PerspectiveCamera2(new Vertex3D(0, 0, 0), new Vertex3D(0, 0, 10), 300);
   const stage = new Stage(objects, camera);
 
   function autorotate() {
@@ -31,7 +31,7 @@ async function main() {
     setTimeout(autorotate, 10);
   }
 
-  // autorotate();
+  autorotate();
 
   enum Keys {
     Up = "ArrowUp",
@@ -87,7 +87,7 @@ async function main() {
     camera.lookAt.move(ddx, 0, ddz);
 
     console.log(camera.position, camera.lookAt, objects[0].getCenter())
-    camera.calcCameraContext();
+    // camera.calcCameraContext();
     setTimeout(keymove, 1000 / 30);
   }
   keymove();

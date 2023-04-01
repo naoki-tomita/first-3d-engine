@@ -59,7 +59,7 @@ export abstract class Camera {
   }
 
   modelToCameraCoordSystem(model: Model): Model {
-    return new Model(model.faces.map(it => this.faceToCameraCoordSystem(it)));
+    return new Model(model.vertices, model.faces.map(it => this.faceToCameraCoordSystem(it)));
   }
 
   culling(face: Face): boolean {
@@ -94,11 +94,10 @@ export class PerspectiveCamera extends Camera {
   }
 
   culling(face: Face): boolean {
-    return true || super.culling(face) && this.perspectiveCurring(face);
+    return super.culling(face) && this.perspectiveCurring(face);
   }
 
-  private perspectiveCurring(_face: Face): boolean {
-    const face = this.faceToCameraCoordSystem(_face);
+  private perspectiveCurring(face: Face): boolean {
     const angle = Matrix.vectorAngle(
       // 面の法線ベクトル
       face.getNormalVector().normalize(),
