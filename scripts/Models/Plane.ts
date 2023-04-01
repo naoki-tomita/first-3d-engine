@@ -20,6 +20,6 @@ export class Plane extends Model {
       new Face(v[0], v[1], v[2], color),
       new Face(v[1], v[3], v[2], color),
     ];
-    super(v, f);
+    super(f);
   }
 }

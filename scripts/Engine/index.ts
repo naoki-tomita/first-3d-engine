@@ -29,7 +29,7 @@ export function render(stage: Stage, options: RenderContext) {
 }
 
 export function renderStage(stage: Stage, options: RenderContext) {
-  stage.zsort()
+  stage.convertToCameraCoordSystem().zsort()
     .forEach(model => renderModel(model, stage.camera, options));
 }
 

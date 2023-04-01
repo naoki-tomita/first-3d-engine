@@ -26,6 +26,10 @@ export class Stage {
     this.objects.forEach(o => o.rotate(theta, phi, new Vertex3D(0, 0, 0)));
   }
 
+  convertToCameraCoordSystem(): Stage {
+    return new Stage(this.objects.map(it => this.camera.modelToCameraCoordSystem(it)), this.camera);
+  }
+
   zsort() {
     return this.objects.slice().sort((a, b) => b.getCenter().z - a.getCenter().z);
   }

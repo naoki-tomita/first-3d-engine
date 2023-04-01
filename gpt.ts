@@ -1,18 +1,18 @@
-以下のコードですが何をしようとしているかわかりますか？
-```
-project(vertex : Vertex3D): Vertex2D {
-    // 向きのベクトルを得る
-    const dx = this.lookAt.x - this.position.x;
-    const dy = this.lookAt.y - this.position.y;
-    const dz = this.lookAt.z - this.position.z;
-    // 向きベクトルから、カメラの回転角を計算する
-    const theta = Math.atan2(dx, dy);
-    const phi = Math.atan2(dz, dx);
-    const psi = Math.atan2(dy, dz);
-    // カメラの回転角から、点の座標を逆回転させる => カメラの座標系に変換する
-    const rotatedPoint = TODO()
+以下のコードを完成させてください。3D上のカメラの座標と注視点をもとに、指定したvertexを2Dに投影したいです。
+なお、すべての計算はこの関数内で行なってください。Mathは使用できるものとします。
 
-    const ratio = (this.distance / ((rotatedPoint.z - this.position.z) || 1));
-    return new Vertex2D(ratio * (rotatedPoint.x - this.position.x), ratio * (rotatedPoint.y - this.position.y));
-  }
+```
+type Vertex3D = {
+  x: number;
+  y: number;
+  z: number;
+}
+type Vertex2D = {
+  x: number;
+  y: number;
+}
+
+function project(cameraPosition: Vertex3D, cameraLookAt: Vertex3D, vertex: Vertex3D): Vertex2D {
+
+}
 ```

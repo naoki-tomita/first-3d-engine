@@ -28,6 +28,14 @@ export class Vertex3D {
     this.z = z;
   }
 
+  subtract(other: Vertex3D): Vertex3D {
+    return new Vertex3D(this.x - other.x, this.y - other.y, this.z - other.z);
+  }
+
+  normalize(): Vector {
+    return this.toVector().normalize()
+  }
+
   rotate(center: Vertex3D, theta: number, phi: number): Vertex3D {
     return Matrix.rotate(this, center, theta, phi);
   }

@@ -30,6 +30,6 @@ export class Cube extends Model {
       new Face(v[0], v[4], v[1], Color.pink),
       new Face(v[1], v[4], v[5], Color.pink),
     ];
-    super(v, f);
+    super(f);
   }
 }

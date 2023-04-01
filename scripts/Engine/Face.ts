@@ -22,7 +22,7 @@ export class Face {
   }
   getNormalVector(): Vector {
     return Matrix.crossProduct(
-      new Vector(this.vertex1.toVector(), this.vertex2.toVector()), 
+      new Vector(this.vertex1.toVector(), this.vertex2.toVector()),
       new Vector(this.vertex2.toVector(), this.vertex3.toVector()));
   }
 }

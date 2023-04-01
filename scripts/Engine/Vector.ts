@@ -3,6 +3,8 @@ import { Vertex3D } from "./Vertex3D";
 import { isNumber } from "../Utils/isNumber";
 
 export class Vector {
+  static Up = new Vector(0, 1, 0);
+
   x: number;
   y: number;
   z: number;
